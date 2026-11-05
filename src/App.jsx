@@ -8,11 +8,18 @@ import { UpdateBanner } from './components/UpdateBanner'
 import { BackupPage } from './pages/BackupPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DataHubPage } from './pages/DataHubPage'
+import { DebtsPage } from './pages/DebtsPage'
+import { InstallmentsPage } from './pages/InstallmentsPage'
+import { InventoryPage } from './pages/InventoryPage'
+import { InvoiceFormPage } from './pages/InvoiceFormPage'
+import { InvoiceViewPage } from './pages/InvoiceViewPage'
+import { InvoicesPage } from './pages/InvoicesPage'
 import { ItemsPage } from './pages/ItemsPage'
 import { ListsPage } from './pages/ListsPage'
 import { LockPage } from './pages/LockPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PartiesPage } from './pages/PartiesPage'
+import { PaymentsPage } from './pages/PaymentsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SetupPage } from './pages/SetupPage'
 import { WorkersPage } from './pages/WorkersPage'
@@ -45,6 +52,22 @@ export default function App() {
               <Routes>
                 <Route element={<AppShell />}>
                   <Route index element={<DashboardPage />} />
+
+                  <Route path="sales" element={<InvoicesPage kind="sale" />} />
+                  <Route path="sales/new" element={<InvoiceFormPage kind="sale" />} />
+                  <Route path="sales/:id" element={<InvoiceViewPage kind="sale" />} />
+                  <Route path="sales/:id/edit" element={<InvoiceFormPage kind="sale" />} />
+
+                  <Route path="purchases" element={<InvoicesPage kind="purchase" />} />
+                  <Route path="purchases/new" element={<InvoiceFormPage kind="purchase" />} />
+                  <Route path="purchases/:id" element={<InvoiceViewPage kind="purchase" />} />
+                  <Route path="purchases/:id/edit" element={<InvoiceFormPage kind="purchase" />} />
+
+                  <Route path="inventory" element={<InventoryPage />} />
+                  <Route path="installments" element={<InstallmentsPage />} />
+                  <Route path="payments" element={<PaymentsPage />} />
+                  <Route path="debts" element={<DebtsPage />} />
+
                   <Route path="data" element={<DataHubPage />} />
                   <Route path="customers" element={<PartiesPage kind="customers" />} />
                   <Route path="suppliers" element={<PartiesPage kind="suppliers" />} />

@@ -63,3 +63,38 @@ export function relativeDays(iso, { digits = 'western' } = {}) {
 export function fileDateStamp(date = new Date()) {
   return date.toISOString().slice(0, 10)
 }
+
+/** Today as YYYY-MM-DD in the device's own timezone (not UTC). */
+export function todayIso(date = new Date()) {
+  const offset = date.getTimezoneOffset()
+  return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 10)
+}
+
+/** Adds whole days to a YYYY-MM-DD string and returns YYYY-MM-DD. */
+export function addDays(isoDate, days) {
+  const base = isoDate ? new Date(`${isoDate}T12:00:00`) : new Date()
+  base.setDate(base.getDate() + Number(days || 0))
+  return todayIso(base)
+}
+
+const shortFormatter = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})
+
+/** Compact date for tables and invoices: 05/11/2026 */
+export function formatShortDate(iso, { digits = 'western' } = {}) {
+  if (!iso) return '—'
+  const date = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso)
+  if (Number.isNaN(date.getTime())) return '—'
+  return localizeDigits(shortFormatter.format(date), digits)
+}
+
+/** Days between today and a YYYY-MM-DD date (negative when it already passed). */
+export function daysUntil(isoDate) {
+  if (!isoDate) return null
+  const target = new Date(`${isoDate}T12:00:00`).getTime()
+  if (Number.isNaN(target)) return null
+  return Math.round((target - Date.now()) / 86400000)
+}

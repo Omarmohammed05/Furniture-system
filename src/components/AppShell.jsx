@@ -1,15 +1,22 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Link, Outlet } from 'react-router-dom'
 import {
+  Boxes,
+  CalendarClock,
   Database,
+  HandCoins,
   HardDriveDownload,
   HardHat,
   LayoutDashboard,
   ListTree,
   Lock,
   Package,
+  PlusCircle,
+  ReceiptText,
   Settings,
+  ShoppingCart,
   Truck,
   Users,
+  Wallet,
 } from 'lucide-react'
 import { useAuth } from '../app/AuthContext'
 import { useSettings } from '../app/SettingsContext'
@@ -18,11 +25,14 @@ import { BackupBadge } from './BackupBadge'
 import { BrandMark } from './BrandMark'
 import { InstallButton } from './InstallButton'
 
-const PRIMARY_NAV = [
+const MAIN_NAV = [
   { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
-  { to: '/data', label: 'البيانات', icon: Database },
-  { to: '/backup', label: 'النسخ الاحتياطي', icon: HardDriveDownload },
-  { to: '/settings', label: 'الإعدادات', icon: Settings },
+  { to: '/sales', label: 'فواتير البيع', icon: ReceiptText },
+  { to: '/purchases', label: 'فواتير الشراء', icon: ShoppingCart },
+  { to: '/inventory', label: 'المخزون', icon: Boxes },
+  { to: '/installments', label: 'الأقساط', icon: CalendarClock },
+  { to: '/payments', label: 'الدفعات', icon: Wallet },
+  { to: '/debts', label: 'الديون', icon: HandCoins },
 ]
 
 const DATA_LINKS = [
@@ -31,6 +41,20 @@ const DATA_LINKS = [
   { to: '/items', label: 'الأصناف', icon: Package },
   { to: '/workers', label: 'العمال', icon: HardHat },
   { to: '/lists', label: 'القوائم المساعدة', icon: ListTree },
+]
+
+const SYSTEM_NAV = [
+  { to: '/data', label: 'البيانات', icon: Database },
+  { to: '/backup', label: 'النسخ الاحتياطي', icon: HardDriveDownload },
+  { to: '/settings', label: 'الإعدادات', icon: Settings },
+]
+
+const MOBILE_NAV = [
+  { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
+  { to: '/sales/new', label: 'بيع', icon: PlusCircle },
+  { to: '/purchases/new', label: 'شراء', icon: ShoppingCart },
+  { to: '/inventory', label: 'المخزون', icon: Boxes },
+  { to: '/data', label: 'البيانات', icon: Database },
 ]
 
 function SidebarLink({ item, onNavigate }) {
@@ -68,7 +92,7 @@ export function AppShell() {
       </a>
 
       {/* Desktop right rail */}
-      <aside className="fixed inset-y-0 right-0 z-40 hidden w-64 flex-col border-e border-line bg-surface lg:flex">
+      <aside className="no-print fixed inset-y-0 right-0 z-40 hidden w-64 flex-col border-e border-line bg-surface lg:flex">
         <div className="flex items-center gap-2.5 px-4 py-4">
           {logo ? (
             <img src={logo} alt="" className="h-9 w-9 rounded-xl border border-line object-contain" />
@@ -81,13 +105,26 @@ export function AppShell() {
           </div>
         </div>
 
+        <Link
+          to="/sales/new"
+          className="mx-3 mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-walnut text-[14.5px] font-semibold text-white transition-colors hover:bg-[#7a4e2b]"
+        >
+          <PlusCircle size={18} aria-hidden="true" />
+          فاتورة بيع جديدة
+        </Link>
+
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 pb-3" aria-label="التنقل الرئيسي">
-          {PRIMARY_NAV.map((item) => (
+          {MAIN_NAV.map((item) => (
             <SidebarLink key={item.to} item={item} />
           ))}
 
           <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">البيانات الأساسية</div>
           {DATA_LINKS.map((item) => (
+            <SidebarLink key={item.to} item={item} />
+          ))}
+
+          <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">النظام</div>
+          {SYSTEM_NAV.map((item) => (
             <SidebarLink key={item.to} item={item} />
           ))}
         </nav>
@@ -154,8 +191,8 @@ export function AppShell() {
         className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden"
         aria-label="التنقل السفلي"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-4 px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
-          {PRIMARY_NAV.map((item) => {
+        <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
+          {MOBILE_NAV.map((item) => {
             const Icon = item.icon
             return (
               <NavLink
@@ -163,7 +200,7 @@ export function AppShell() {
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  `flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11.5px] font-semibold transition-colors ${
+                  `flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors ${
                     isActive ? 'text-ink' : 'text-muted'
                   }`
                 }
@@ -171,7 +208,7 @@ export function AppShell() {
                 {({ isActive }) => (
                   <>
                     <span
-                      className={`flex h-8 w-12 items-center justify-center rounded-full transition-colors ${
+                      className={`flex h-8 w-11 items-center justify-center rounded-full transition-colors ${
                         isActive ? 'bg-ink text-white' : ''
                       }`}
                     >

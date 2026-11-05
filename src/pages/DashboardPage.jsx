@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom'
 import {
   ArrowLeft,
+  Boxes,
   ChevronLeft,
   HardDriveDownload,
   HardHat,
   Package,
+  PlusCircle,
   ShieldCheck,
+  ShoppingCart,
   Smartphone,
   Sparkles,
   Truck,
   Users,
+  Wallet,
 } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
@@ -23,6 +27,35 @@ import { PageHeader } from '../components/ui/PageHeader'
 import { BrandMark } from '../components/BrandMark'
 import { formatLongDate } from '../lib/dates'
 import { localizeDigits } from '../lib/digits'
+
+const QUICK_ACTIONS = [
+  { to: '/sales/new', label: 'فاتورة بيع', icon: PlusCircle },
+  { to: '/purchases/new', label: 'فاتورة شراء', icon: ShoppingCart },
+  { to: '/payments', label: 'تحصيل دفعة', icon: Wallet },
+  { to: '/inventory', label: 'المخزون', icon: Boxes },
+]
+
+function QuickActions() {
+  return (
+    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+      {QUICK_ACTIONS.map((action) => {
+        const Icon = action.icon
+        return (
+          <Link
+            key={action.to}
+            to={action.to}
+            className="card flex items-center gap-2.5 px-3 py-3 transition-shadow hover:shadow-[0_8px_24px_-8px_rgba(0,0,0,0.12)]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sand text-walnut">
+              <Icon size={17} aria-hidden="true" />
+            </span>
+            <span className="text-[13px] font-semibold text-ink">{action.label}</span>
+          </Link>
+        )
+      })}
+    </div>
+  )
+}
 
 function StatCard({ label, value, icon: Icon, to }) {
   return (
@@ -98,8 +131,10 @@ export function DashboardPage() {
       <PageHeader
         title={`أهلاً، ${shopName}`}
         description={formatLongDate(new Date(), { digits: settings?.display?.digits })}
-        actions={<Badge tone="sand">المرحلة الأولى</Badge>}
+        actions={<Badge tone="sand">المرحلة الثانية</Badge>}
       />
+
+      <QuickActions />
 
       <BackupCard status={status} date={date} />
 
@@ -175,8 +210,8 @@ export function DashboardPage() {
           <Card className="flex items-center gap-3 p-4">
             <BrandMark size={36} />
             <div>
-              <p className="text-[13.5px] font-semibold text-ink">المرحلة الأولى مكتملة</p>
-              <p className="text-[12px] leading-5 text-muted">المشتريات والمبيعات والمخزون في المراحل القادمة.</p>
+              <p className="text-[13.5px] font-semibold text-ink">المبيعات والمشتريات جاهزة</p>
+              <p className="text-[12px] leading-5 text-muted">المخزون والدفعات والأقساط تعمل بالكامل بدون إنترنت.</p>
             </div>
           </Card>
         </div>

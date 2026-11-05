@@ -1,5 +1,15 @@
 import { Link } from 'react-router-dom'
-import { ChevronLeft, HardHat, ListTree, Package, Truck, Users } from 'lucide-react'
+import {
+  ChevronLeft,
+  HandCoins,
+  HardDriveDownload,
+  HardHat,
+  ListTree,
+  Package,
+  Settings,
+  Truck,
+  Users,
+} from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
 import { getOverviewCounts } from '../services/overview'
@@ -40,6 +50,27 @@ const SECTIONS = [
     title: 'القوائم المساعدة',
     description: 'التصنيفات والوحدات وتصنيفات المصروفات',
     icon: ListTree,
+    countKey: null,
+  },
+  {
+    to: '/debts',
+    title: 'الديون',
+    description: 'أرصدة العملاء والموردين',
+    icon: HandCoins,
+    countKey: null,
+  },
+  {
+    to: '/backup',
+    title: 'النسخ الاحتياطي',
+    description: 'تصدير واستعادة كل البيانات',
+    icon: HardDriveDownload,
+    countKey: null,
+  },
+  {
+    to: '/settings',
+    title: 'الإعدادات',
+    description: 'بيانات المعرض والضريبة والرمز السري',
+    icon: Settings,
     countKey: null,
   },
 ]

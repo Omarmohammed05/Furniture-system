@@ -1,0 +1,216 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Ban, Eye, Pencil, Plus, ReceiptText } from 'lucide-react'
+import { useToast } from '../app/ToastContext'
+import { useSettings } from '../app/SettingsContext'
+import { useLive } from '../hooks/useLive'
+import { formatShortDate } from '../lib/dates'
+import { remainingOf } from '../lib/invoiceStatus'
+import { listParties } from '../services/parties'
+import { listPurchaseInvoices, voidPurchaseInvoice } from '../services/purchases'
+import { listSalesInvoices, voidSalesInvoice } from '../services/sales'
+import { InvoiceStatusBadge } from '../components/InvoiceStatusBadge'
+import { VoidInvoiceModal } from '../components/VoidInvoiceModal'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Input, Select } from '../components/ui/Field'
+import { PageHeader } from '../components/ui/PageHeader'
+
+const CONFIG = {
+  sale: {
+    title: 'فواتير البيع',
+    description: 'كل عمليات البيع مع حالة السداد والمتبقي على العميل.',
+    newTo: '/sales/new',
+    newLabel: 'فاتورة بيع',
+    base: '/sales',
+    partyField: 'customers',
+    partyLabel: 'العميل',
+    list: listSalesInvoices,
+    voidInvoice: voidSalesInvoice,
+    emptyTitle: 'لا توجد فواتير بيع بعد',
+    emptyDescription: 'أنشئ أول فاتورة بيع ليُخصم المخزون ويُسجَّل المتبقي على العميل.',
+  },
+  purchase: {
+    title: 'فواتير الشراء',
+    description: 'فواتير الخامات من الموردين، ومقدار ما تبقّى لهم.',
+    newTo: '/purchases/new',
+    newLabel: 'فاتورة شراء',
+    base: '/purchases',
+    partyField: 'suppliers',
+    partyLabel: 'المورد',
+    list: listPurchaseInvoices,
+    voidInvoice: voidPurchaseInvoice,
+    emptyTitle: 'لا توجد فواتير شراء بعد',
+    emptyDescription: 'سجّل مشترياتك من الخامات ليزيد المخزون وتُحسب مستحقات الموردين.',
+  },
+}
+
+export function InvoicesPage({ kind }) {
+  const config = CONFIG[kind]
+  const { money, digits } = useSettings()
+  const toast = useToast()
+
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [partyId, setPartyId] = useState('')
+  const [voidTarget, setVoidTarget] = useState(null)
+
+  const invoices = useLive(
+    () => config.list({ search, status, [kind === 'sale' ? 'customerId' : 'supplierId']: partyId }),
+    [kind, search, status, partyId],
+  )
+  const parties = useLive(() => listParties(config.partyField), [config.partyField])
+
+  const visible = (invoices || []).filter(Boolean)
+  const total = visible.filter((row) => !row.voidedAt).reduce((sum, row) => sum + (row.total || 0), 0)
+
+  const handleVoid = async (reason) => {
+    try {
+      await config.voidInvoice(voidTarget.id, reason)
+      toast.success('تم إلغاء الفاتورة وعكس حركات المخزون')
+      setVoidTarget(null)
+    } catch (error) {
+      toast.error(error.message || 'تعذر الإلغاء')
+    }
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title={config.title}
+        description={config.description}
+        actions={
+          <Link to={config.newTo}>
+            <Button variant="primary">
+              <Plus size={17} />
+              {config.newLabel}
+            </Button>
+          </Link>
+        }
+      />
+
+      <div className="mb-4 flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-3 sm:flex-row sm:items-center">
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="ابحث برقم الفاتورة أو الاسم…"
+          type="search"
+          aria-label="بحث"
+          className="flex-1"
+        />
+        <Select value={partyId} onChange={(event) => setPartyId(event.target.value)} className="sm:w-48" aria-label={config.partyLabel}>
+          <option value="">كل {config.partyLabel === 'العميل' ? 'العملاء' : 'الموردين'}</option>
+          {(parties || []).map((party) => (
+            <option key={party.id} value={party.id}>
+              {party.name}
+            </option>
+          ))}
+        </Select>
+        <Select value={status} onChange={(event) => setStatus(event.target.value)} className="sm:w-40" aria-label="الحالة">
+          <option value="all">كل الحالات</option>
+          <option value="unpaid">غير مدفوعة</option>
+          <option value="partial">مدفوعة جزئياً</option>
+          <option value="paid">مدفوعة</option>
+          <option value="void">ملغاة</option>
+        </Select>
+      </div>
+
+      {invoices === undefined ? (
+        <Card className="space-y-3 p-4">
+          {[0, 1, 2].map((row) => (
+            <div key={row} className="h-14 animate-pulse rounded-xl bg-canvas" />
+          ))}
+        </Card>
+      ) : visible.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon={ReceiptText}
+            title={search || partyId || status !== 'all' ? 'لا توجد فواتير مطابقة' : config.emptyTitle}
+            description={
+              search || partyId || status !== 'all'
+                ? 'جرّب بحثاً آخر أو أعد ضبط التصفية.'
+                : config.emptyDescription
+            }
+            action={
+              <Link to={config.newTo}>
+                <Button variant="primary">
+                  <Plus size={16} />
+                  {config.newLabel}
+                </Button>
+              </Link>
+            }
+          />
+        </Card>
+      ) : (
+        <Card>
+          <div className="flex items-center justify-between border-b border-line px-4 py-2.5 text-[12px] font-semibold text-muted">
+            <span>{visible.length} فاتورة</span>
+            <span className="tabular">إجمالي المعروض: {money(total)}</span>
+          </div>
+          <ul className="divide-y divide-line">
+            {visible.map((invoice) => {
+              const remaining = remainingOf(invoice)
+              return (
+                <li key={invoice.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 ${invoice.voidedAt ? 'opacity-70' : ''}`}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link to={`${config.base}/${invoice.id}`} className="tabular text-[14px] font-bold text-ink hover:underline" dir="ltr">
+                        {invoice.number}
+                      </Link>
+                      <InvoiceStatusBadge status={invoice.status} />
+                    </div>
+                    <p className="mt-0.5 truncate text-[12.5px] text-muted">
+                      {invoice[kind === 'sale' ? 'customerName' : 'supplierName']} • {formatShortDate(invoice.date, { digits })}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4 sm:justify-end">
+                    <div className="text-start sm:text-end">
+                      <p className="tabular text-[14px] font-bold text-ink">{money(invoice.total)}</p>
+                      {!invoice.voidedAt && remaining > 0 && (
+                        <p className="tabular text-[11.5px] font-semibold text-danger">متبقي {money(remaining)}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Link to={`${config.base}/${invoice.id}`} aria-label="عرض الفاتورة">
+                        <Button variant="ghost" size="icon">
+                          <Eye size={16} />
+                        </Button>
+                      </Link>
+                      {!invoice.voidedAt && (
+                        <Link to={`${config.base}/${invoice.id}/edit`} aria-label="تعديل الفاتورة">
+                          <Button variant="ghost" size="icon">
+                            <Pencil size={16} />
+                          </Button>
+                        </Link>
+                      )}
+                      {!invoice.voidedAt && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setVoidTarget(invoice)}
+                          aria-label="إلغاء الفاتورة"
+                          className="text-muted hover:text-danger"
+                        >
+                          <Ban size={16} />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </Card>
+      )}
+
+      <VoidInvoiceModal
+        open={Boolean(voidTarget)}
+        onClose={() => setVoidTarget(null)}
+        onConfirm={handleVoid}
+        number={voidTarget?.number}
+      />
+    </div>
+  )
+}
