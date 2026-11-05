@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import {
   BarChart3,
@@ -14,6 +15,7 @@ import {
   LayoutDashboard,
   ListTree,
   Lock,
+  MoreHorizontal,
   Package,
   PlusCircle,
   Receipt,
@@ -30,6 +32,7 @@ import { APP_VERSION } from '../lib/appInfo'
 import { BackupBadge } from './BackupBadge'
 import { BrandMark } from './BrandMark'
 import { InstallButton } from './InstallButton'
+import { MobileMoreSheet } from './MobileMoreSheet'
 
 const MAIN_NAV = [
   { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
@@ -58,7 +61,7 @@ const DATA_LINKS = [
 ]
 
 const SYSTEM_NAV = [
-  { to: '/data', label: 'البيانات', icon: Database },
+  { to: '/data', label: 'مركز البيانات', icon: Database },
   { to: '/activity', label: 'سجل النشاط', icon: History },
   { to: '/backup', label: 'النسخ الاحتياطي', icon: HardDriveDownload },
   { to: '/settings', label: 'الإعدادات', icon: Settings },
@@ -70,6 +73,14 @@ const MOBILE_NAV = [
   { to: '/purchases/new', label: 'شراء', icon: ShoppingCart },
   { to: '/inventory', label: 'المخزون', icon: Boxes },
   { to: '/data', label: 'البيانات', icon: Database },
+]
+
+/** Everything the phone bottom bar has no room for. */
+const MORE_GROUPS = [
+  { title: 'العمليات', items: MAIN_NAV.filter((item) => item.to !== '/') },
+  { title: 'العاملون والحسابات', items: MONEY_NAV },
+  { title: 'البيانات الأساسية', items: DATA_LINKS },
+  { title: 'النظام', items: SYSTEM_NAV },
 ]
 
 function SidebarLink({ item, onNavigate }) {
@@ -94,6 +105,7 @@ function SidebarLink({ item, onNavigate }) {
 export function AppShell() {
   const { settings } = useSettings()
   const { lock } = useAuth()
+  const [moreOpen, setMoreOpen] = useState(false)
   const shopName = settings?.profile?.shopName || 'نظام المعرض'
   const logo = settings?.profile?.logoDataUrl
 
@@ -211,7 +223,7 @@ export function AppShell() {
         className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface/95 backdrop-blur-xl lg:hidden"
         aria-label="التنقل السفلي"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto grid max-w-lg grid-cols-6 px-1 pt-1 pb-[max(0.35rem,env(safe-area-inset-bottom))]">
           {MOBILE_NAV.map((item) => {
             const Icon = item.icon
             return (
@@ -240,8 +252,29 @@ export function AppShell() {
               </NavLink>
             )
           })}
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors ${
+              moreOpen ? 'text-ink' : 'text-muted'
+            }`}
+          >
+            <span
+              className={`flex h-8 w-11 items-center justify-center rounded-full transition-colors ${
+                moreOpen ? 'bg-ink text-white' : ''
+              }`}
+            >
+              <MoreHorizontal size={19} aria-hidden="true" />
+            </span>
+            <span className="leading-none">المزيد</span>
+          </button>
         </div>
       </nav>
+
+      <MobileMoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} groups={MORE_GROUPS} />
     </div>
   )
 }

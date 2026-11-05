@@ -301,6 +301,11 @@ export function InvoiceFormPage({ kind }) {
                 priceField={isSale ? 'salePrice' : 'purchasePrice'}
                 stock={isSale ? stock : null}
                 errors={errors}
+                emptyHint={
+                  isSale
+                    ? 'لا توجد أصناف من نوع «منتج تام» بعد — أضف الصنف من صفحة الأصناف واختر النوع «منتج تام» ليظهر هنا.'
+                    : undefined
+                }
                 onChange={(lines) => setField('lines', lines)}
               />
             </div>

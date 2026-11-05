@@ -12,7 +12,15 @@ export function emptyLine() {
  * Editable invoice lines. Prices prefill from the item's default price, and in
  * a sale the available stock is shown next to each line.
  */
-export function InvoiceLinesEditor({ lines, items, priceField = 'salePrice', stock, onChange, errors = {} }) {
+export function InvoiceLinesEditor({
+  lines,
+  items,
+  priceField = 'salePrice',
+  stock,
+  onChange,
+  errors = {},
+  emptyHint = 'أضف أصنافاً أولاً لتتمكن من إدخال الفاتورة.',
+}) {
   const { money, digits } = useSettings()
   const byId = new Map((items || []).map((item) => [item.id, item]))
 
@@ -32,7 +40,7 @@ export function InvoiceLinesEditor({ lines, items, priceField = 'salePrice', sto
   if (!items || items.length === 0) {
     return (
       <p className="rounded-xl bg-canvas px-4 py-6 text-center text-[13.5px] text-muted">
-        أضف أصنافاً أولاً لتتمكن من إدخال الفاتورة.
+        {emptyHint}
       </p>
     )
   }
