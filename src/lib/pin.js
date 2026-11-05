@@ -45,8 +45,19 @@ export function hashPin(pin, saltBase64) {
   return derive(pin, saltBase64)
 }
 
+/** Compares in constant time, so a wrong PIN leaks nothing about the hash. */
+function safeEqual(left, right) {
+  if (typeof left !== 'string' || typeof right !== 'string') return false
+  if (left.length !== right.length) return false
+  let diff = 0
+  for (let index = 0; index < left.length; index += 1) {
+    diff |= left.charCodeAt(index) ^ right.charCodeAt(index)
+  }
+  return diff === 0
+}
+
 export async function verifyPinHash(pin, saltBase64, expectedHash) {
   if (!saltBase64 || !expectedHash) return false
   const actual = await derive(pin, saltBase64)
-  return actual === expectedHash
+  return safeEqual(actual, expectedHash)
 }

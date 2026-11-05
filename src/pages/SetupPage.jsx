@@ -6,6 +6,7 @@ import { BrandMark } from '../components/BrandMark'
 import { LogoUpload } from '../components/LogoUpload'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Field'
+import { PasswordInput } from '../components/ui/PasswordInput'
 import { isValidPin } from '../lib/pin'
 
 const STEPS = ['بيانات المعرض', 'رمز الدخول', 'جاهز للبدء']
@@ -75,7 +76,7 @@ export function SetupPage() {
             <li key={label} className="flex items-center gap-2">
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold ${
-                  index <= step ? 'bg-ink text-white' : 'bg-surface text-muted ring-1 ring-line'
+                  index <= step ? 'bg-solid text-on-solid' : 'bg-surface text-muted ring-1 ring-line'
                 }`}
               >
                 {index + 1}
@@ -152,9 +153,8 @@ export function SetupPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="الرمز" htmlFor="pin">
-                  <Input
+                  <PasswordInput
                     id="pin"
-                    type="password"
                     inputMode="numeric"
                     maxLength={6}
                     value={pin}
@@ -167,9 +167,8 @@ export function SetupPage() {
                   />
                 </Field>
                 <Field label="تأكيد الرمز" htmlFor="pinConfirm">
-                  <Input
+                  <PasswordInput
                     id="pinConfirm"
-                    type="password"
                     inputMode="numeric"
                     maxLength={6}
                     value={pinConfirm}

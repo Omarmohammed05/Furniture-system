@@ -33,8 +33,9 @@ import { WorkersPage } from './pages/WorkersPage'
 
 function SplashScreen() {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-canvas">
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-canvas">
       <BrandMark size={56} className="animate-pulse" />
+      <div className="loading-bar" role="status" aria-label="جارٍ تحميل البيانات" />
       <p className="text-[13px] text-muted">جارٍ تحميل البيانات…</p>
     </div>
   )

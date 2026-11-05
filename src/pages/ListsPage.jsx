@@ -201,7 +201,7 @@ export function ListsPage() {
             type="button"
             onClick={() => setTab(entry.key)}
             className={`min-h-10 flex-1 rounded-lg px-3 text-[13px] font-semibold whitespace-nowrap transition-colors ${
-              tab === entry.key ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'
+              tab === entry.key ? 'bg-solid text-on-solid' : 'text-muted hover:bg-canvas hover:text-ink'
             }`}
             aria-pressed={tab === entry.key}
           >

@@ -1,10 +1,10 @@
 const TONES = {
   neutral: 'bg-canvas text-muted',
-  ink: 'bg-ink text-white',
+  ink: 'bg-solid text-on-solid',
   sand: 'bg-sand text-walnut',
-  success: 'bg-success-soft text-[#05603a]',
-  danger: 'bg-danger-soft text-[#912018]',
-  warn: 'bg-warn-soft text-[#93370d]',
+  success: 'bg-success-soft text-success-ink',
+  danger: 'bg-danger-soft text-danger-ink',
+  warn: 'bg-warn-soft text-warn-ink',
   outline: 'border border-line text-muted',
 }
 

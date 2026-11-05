@@ -7,6 +7,29 @@ import { PinPad } from '../components/PinPad'
 
 const MAX_ATTEMPTS = 5
 const COOLDOWN_MS = 30000
+/** Failed attempts are kept on the device, so reloading the page cannot reset the count. */
+const LOCKOUT_KEY = 'showroom.pinLockout'
+
+function readLockout() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(LOCKOUT_KEY) || '{}')
+    const attempts = Number(stored?.attempts) || 0
+    const until = Number(stored?.until) || 0
+    if (until && until < Date.now()) return { attempts: 0, until: 0 }
+    return { attempts, until }
+  } catch {
+    return { attempts: 0, until: 0 }
+  }
+}
+
+function writeLockout({ attempts, until }) {
+  try {
+    if (!attempts && !until) window.localStorage.removeItem(LOCKOUT_KEY)
+    else window.localStorage.setItem(LOCKOUT_KEY, JSON.stringify({ attempts, until }))
+  } catch {
+    /* private mode: the in-memory count still applies for this session */
+  }
+}
 
 export function LockPage() {
   const { settings, digits } = useSettings()
@@ -14,8 +37,8 @@ export function LockPage() {
 
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
-  const [attempts, setAttempts] = useState(0)
-  const [cooldownUntil, setCooldownUntil] = useState(0)
+  const [attempts, setAttempts] = useState(() => readLockout().attempts)
+  const [cooldownUntil, setCooldownUntil] = useState(() => readLockout().until)
   const [now, setNow] = useState(Date.now())
 
   const shopName = settings?.profile?.shopName || 'نظام المعرض'
@@ -38,16 +61,24 @@ export function LockPage() {
   const handleSubmit = async () => {
     if (busy || coolingDown || pin.length < 4) return
     const ok = await unlock(pin)
-    if (ok) return
+    if (ok) {
+      setAttempts(0)
+      setCooldownUntil(0)
+      writeLockout({ attempts: 0, until: 0 })
+      return
+    }
 
     const nextAttempts = attempts + 1
     setPin('')
     if (nextAttempts >= MAX_ATTEMPTS) {
+      const until = Date.now() + COOLDOWN_MS
       setAttempts(0)
-      setCooldownUntil(Date.now() + COOLDOWN_MS)
+      setCooldownUntil(until)
+      writeLockout({ attempts: 0, until })
       setError('محاولات كثيرة — انتظر قليلاً ثم حاول مرة أخرى')
     } else {
       setAttempts(nextAttempts)
+      writeLockout({ attempts: nextAttempts, until: 0 })
       setError('الرمز غير صحيح، حاول مرة أخرى')
     }
   }

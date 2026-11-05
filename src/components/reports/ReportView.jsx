@@ -111,7 +111,7 @@ export function ReportView({ report, periodLabel }) {
   }
 
   return (
-    <article className="print-page rounded-2xl border border-line bg-white p-5 text-ink sm:p-7" dir="rtl">
+    <article className="paper print-page rounded-2xl border border-line bg-white p-5 text-ink sm:p-7" dir="rtl">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-4">
         <div className="flex items-center gap-3">
           {profile.logoDataUrl ? (
@@ -152,7 +152,7 @@ export function ReportView({ report, periodLabel }) {
       )}
 
       {report.note && (
-        <p className="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-[12px] leading-6 text-[#93370d]">{report.note}</p>
+        <p className="mt-3 rounded-xl bg-warn-soft px-3 py-2 text-[12px] leading-6 text-warn-ink">{report.note}</p>
       )}
 
       {report.sections.map((section, index) => (

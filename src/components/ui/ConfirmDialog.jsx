@@ -36,7 +36,7 @@ export function ConfirmDialog({
           <Button variant="ghost" onClick={onClose} disabled={busy}>
             {cancelLabel}
           </Button>
-          <Button variant={tone} onClick={handleConfirm} disabled={busy}>
+          <Button variant={tone} onClick={handleConfirm} loading={busy}>
             {busy ? 'جارٍ التنفيذ…' : confirmLabel}
           </Button>
         </>

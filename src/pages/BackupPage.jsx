@@ -159,7 +159,7 @@ export function BackupPage() {
           <div className="space-y-4 px-5 py-4">
             <div className="flex items-start gap-2 rounded-xl border border-danger/20 bg-danger-soft/50 px-3 py-2.5">
               <AlertTriangle size={16} className="mt-1 shrink-0 text-danger" aria-hidden="true" />
-              <p className="text-[12.5px] leading-6 text-[#912018]">
+              <p className="text-[12.5px] leading-6 text-danger-ink">
                 الاستعادة تمسح البيانات الحالية. قبل التنفيذ يُنزّل النظام نسخة أمان تلقائية من بياناتك
                 الحالية.
               </p>
@@ -227,7 +227,7 @@ export function BackupPage() {
               </div>
             </dl>
 
-            <p className="rounded-xl bg-danger-soft px-3 py-2.5 text-[12.5px] leading-6 text-[#912018]">
+            <p className="rounded-xl bg-danger-soft px-3 py-2.5 text-[12.5px] leading-6 text-danger-ink">
               سيتم حذف كل البيانات الحالية واستبدالها ببيانات هذه النسخة. يُنزّل النظام نسخة أمان
               تلقائية أولاً.
             </p>

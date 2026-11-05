@@ -31,7 +31,7 @@ export function BackupBadge({ compact = false }) {
       to="/backup"
       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[12.5px] font-semibold transition-colors ${
         status.overdue
-          ? 'border-danger/25 bg-danger-soft text-[#912018] hover:bg-danger-soft/80'
+          ? 'border-danger/25 bg-danger-soft text-danger-ink hover:bg-danger-soft/80'
           : 'border-line bg-surface text-muted hover:text-ink'
       }`}
       title="افتح صفحة النسخ الاحتياطي"

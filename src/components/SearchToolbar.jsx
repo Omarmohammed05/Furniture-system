@@ -22,7 +22,7 @@ export function SearchToolbar({ search, onSearch, placeholder, includeArchived, 
             type="checkbox"
             checked={includeArchived}
             onChange={(event) => onIncludeArchived(event.target.checked)}
-            className="h-4 w-4 accent-[#1c1c1e]"
+            className="h-4 w-4 accent-solid"
           />
           إظهار المؤرشفة
         </label>

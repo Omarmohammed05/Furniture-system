@@ -16,7 +16,7 @@ export function InvoiceDocument({ kind, invoice, lines = [], party }) {
   const remaining = Math.max(0, (invoice.total || 0) - (invoice.paid || 0))
 
   return (
-    <article className="print-page rounded-2xl border border-line bg-white p-6 text-ink sm:p-8" dir="rtl">
+    <article className="paper print-page rounded-2xl border border-line bg-white p-6 text-ink sm:p-8" dir="rtl">
       <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
         <div className="flex items-center gap-3">
           {profile.logoDataUrl ? (

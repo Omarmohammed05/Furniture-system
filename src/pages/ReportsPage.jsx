@@ -137,7 +137,7 @@ export function ReportsPage() {
                   aria-pressed={active}
                   className={`flex min-h-11 items-center gap-2 rounded-xl border px-3 text-[13px] font-semibold transition-colors ${
                     active
-                      ? 'border-ink bg-ink text-white'
+                      ? 'border-ink bg-solid text-on-solid'
                       : 'border-line bg-surface text-ink hover:bg-canvas'
                   }`}
                 >

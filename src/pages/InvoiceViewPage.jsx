@@ -153,7 +153,7 @@ export function InvoiceViewPage({ kind }) {
       </div>
 
       {invoice.voidedAt && (
-        <div className="no-print mb-4 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-[13.5px] font-semibold text-[#912018]">
+        <div className="no-print mb-4 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-[13.5px] font-semibold text-danger-ink">
           هذه الفاتورة ملغاة — {invoice.voidReason}
           {invoice.paid > 0 && (
             <p className="mt-1 font-semibold">

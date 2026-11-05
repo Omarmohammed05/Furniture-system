@@ -36,6 +36,8 @@ import { BackupBadge } from './BackupBadge'
 import { BrandMark } from './BrandMark'
 import { InstallButton } from './InstallButton'
 import { MobileMoreSheet } from './MobileMoreSheet'
+import { ScrollToTop } from './ScrollToTop'
+import { ThemeToggle } from './ThemeToggle'
 
 const MAIN_NAV = [
   { to: '/', label: 'الرئيسية', icon: LayoutDashboard, end: true },
@@ -97,7 +99,7 @@ function SidebarLink({ item, collapsed, onNavigate }) {
       className={({ isActive }) =>
         `flex min-h-11 items-center gap-3 rounded-xl text-[14.5px] font-semibold transition-colors ${
           collapsed ? 'justify-center px-0' : 'px-3'
-        } ${isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'}`
+        } ${isActive ? 'bg-solid text-on-solid' : 'text-muted hover:bg-canvas hover:text-ink'}`
       }
     >
       <Icon size={19} aria-hidden="true" className="shrink-0" />
@@ -135,7 +137,7 @@ export function AppShell() {
     <div className="min-h-dvh bg-canvas">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-[95] focus:rounded-lg focus:bg-ink focus:px-4 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-[95] focus:rounded-lg focus:bg-solid focus:px-4 focus:py-2 focus:text-on-solid"
       >
         تخطَّ إلى المحتوى
       </a>
@@ -168,7 +170,7 @@ export function AppShell() {
         <Link
           to="/sales/new"
           title={collapsed ? 'فاتورة بيع جديدة' : undefined}
-          className={`mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-walnut text-[14.5px] font-semibold text-white transition-colors hover:bg-[#7a4e2b] ${
+          className={`mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-walnut text-[14.5px] font-semibold text-on-walnut transition-colors hover:bg-walnut-hover ${
             collapsed ? 'mx-auto w-11' : 'mx-3'
           }`}
         >
@@ -268,6 +270,7 @@ export function AppShell() {
               <span className="hidden sm:inline-flex">
                 <InstallButton />
               </span>
+              <ThemeToggle />
               <button
                 type="button"
                 onClick={lock}
@@ -300,7 +303,7 @@ export function AppShell() {
                 end={item.end}
                 className={({ isActive }) =>
                   `flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors ${
-                    isActive ? 'text-ink' : 'text-muted'
+                    isActive ? 'text-ink' : 'text-muted hover:text-ink'
                   }`
                 }
               >
@@ -308,7 +311,7 @@ export function AppShell() {
                   <>
                     <span
                       className={`flex h-8 w-11 items-center justify-center rounded-full transition-colors ${
-                        isActive ? 'bg-ink text-white' : ''
+                        isActive ? 'bg-solid text-on-solid' : 'hover:bg-canvas'
                       }`}
                     >
                       <Icon size={19} aria-hidden="true" />
@@ -326,12 +329,12 @@ export function AppShell() {
             aria-haspopup="dialog"
             aria-expanded={moreOpen}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-colors ${
-              moreOpen ? 'text-ink' : 'text-muted'
+              moreOpen ? 'text-ink' : 'text-muted hover:text-ink'
             }`}
           >
             <span
               className={`flex h-8 w-11 items-center justify-center rounded-full transition-colors ${
-                moreOpen ? 'bg-ink text-white' : ''
+                moreOpen ? 'bg-solid text-on-solid' : 'hover:bg-canvas'
               }`}
             >
               <MoreHorizontal size={19} aria-hidden="true" />
@@ -340,6 +343,8 @@ export function AppShell() {
           </button>
         </div>
       </nav>
+
+      <ScrollToTop />
 
       <MobileMoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} groups={MORE_GROUPS} />
     </div>

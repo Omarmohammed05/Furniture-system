@@ -392,7 +392,7 @@ export function InvoiceFormPage({ kind }) {
                     type="checkbox"
                     checked={values.installment.enabled}
                     onChange={(event) => setField('installment', { ...values.installment, enabled: event.target.checked })}
-                    className="h-4 w-4 accent-[#1c1c1e]"
+                    className="h-4 w-4 accent-solid"
                   />
                   تقسيم المتبقي على أقساط
                 </label>

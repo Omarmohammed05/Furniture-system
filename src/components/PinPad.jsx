@@ -45,7 +45,7 @@ export function PinPad({ value, onChange, onSubmit, length = 0, maxLength = 6, e
           <span
             key={index}
             className={`h-3.5 w-3.5 rounded-full transition-all ${
-              index < value.length ? 'scale-110 bg-ink' : 'border border-line bg-surface'
+              index < value.length ? 'scale-110 bg-solid' : 'border border-line bg-surface'
             }`}
           />
         ))}
@@ -71,7 +71,7 @@ export function PinPad({ value, onChange, onSubmit, length = 0, maxLength = 6, e
           type="button"
           onClick={() => onChange('')}
           disabled={busy}
-          className="h-14 rounded-2xl text-[13px] font-semibold text-muted transition-colors hover:bg-black/5 disabled:opacity-50"
+          className="h-14 rounded-2xl text-[13px] font-semibold text-muted transition-colors hover:bg-solid/5 disabled:opacity-50"
         >
           مسح
         </button>
@@ -87,7 +87,7 @@ export function PinPad({ value, onChange, onSubmit, length = 0, maxLength = 6, e
           type="button"
           onClick={() => onChange(value.slice(0, -1))}
           disabled={busy}
-          className="flex h-14 items-center justify-center rounded-2xl text-muted transition-colors hover:bg-black/5 disabled:opacity-50"
+          className="flex h-14 items-center justify-center rounded-2xl text-muted transition-colors hover:bg-solid/5 disabled:opacity-50"
           aria-label="حذف الرقم الأخير"
         >
           <Delete size={22} />
@@ -98,7 +98,7 @@ export function PinPad({ value, onChange, onSubmit, length = 0, maxLength = 6, e
         type="button"
         onClick={() => onSubmit?.()}
         disabled={busy || value.length < 4}
-        className="mt-5 h-12 w-full rounded-xl bg-ink text-base font-semibold text-white transition-colors hover:bg-black disabled:opacity-40"
+        className="mt-5 h-12 w-full rounded-xl bg-solid text-base font-semibold text-on-solid transition-colors hover:bg-solid-hover disabled:opacity-40"
       >
         {busy ? 'جارٍ التحقق…' : 'دخول'}
       </button>

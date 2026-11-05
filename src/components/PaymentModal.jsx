@@ -175,7 +175,7 @@ export function PaymentModal({
           <Textarea id="payment-note" rows={2} value={note} onChange={(event) => setNote(event.target.value)} />
         </Field>
 
-        {error && <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13px] font-medium text-[#912018]">{error}</p>}
+        {error && <p className="rounded-xl bg-danger-soft px-3 py-2 text-[13px] font-medium text-danger-ink">{error}</p>}
       </div>
     </Modal>
   )

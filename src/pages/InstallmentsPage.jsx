@@ -137,7 +137,7 @@ export function InstallmentsPage() {
             type="button"
             onClick={() => setFilter(option.value)}
             className={`h-10 shrink-0 rounded-xl px-3 text-[13px] font-semibold transition-colors ${
-              filter === option.value ? 'bg-ink text-white' : 'bg-canvas text-muted hover:text-ink'
+              filter === option.value ? 'bg-solid text-on-solid' : 'bg-canvas text-muted hover:text-ink'
             }`}
           >
             {option.label}

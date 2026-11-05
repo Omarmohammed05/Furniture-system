@@ -28,6 +28,7 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Field, Input, Select, Textarea } from '../components/ui/Field'
+import { PasswordInput } from '../components/ui/PasswordInput'
 import { PageHeader } from '../components/ui/PageHeader'
 import { LogoUpload } from '../components/LogoUpload'
 import { InstallButton } from '../components/InstallButton'
@@ -58,11 +59,11 @@ function Toggle({ checked, onChange, label, hint, disabled = false }) {
         aria-label={label}
         disabled={disabled}
         onClick={() => onChange(!checked)}
-        className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors disabled:opacity-40 ${
-          checked ? 'justify-start bg-ink' : 'justify-end bg-line'
+        className={`flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors hover:opacity-85 disabled:opacity-40 ${
+          checked ? 'justify-start bg-solid' : 'justify-end bg-line'
         }`}
       >
-        <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
+        <span className={`h-5 w-5 rounded-full shadow-sm transition-colors ${checked ? 'bg-on-solid' : 'bg-white'}`} />
       </button>
     </div>
   )
@@ -556,9 +557,8 @@ function SecuritySection() {
 
           <div className="grid gap-3 sm:grid-cols-3">
             <Field label="الرمز الحالي" htmlFor="current-pin">
-              <Input
+              <PasswordInput
                 id="current-pin"
-                type="password"
                 inputMode="numeric"
                 maxLength={6}
                 value={currentPin}
@@ -567,9 +567,8 @@ function SecuritySection() {
               />
             </Field>
             <Field label="الرمز الجديد" htmlFor="new-pin">
-              <Input
+              <PasswordInput
                 id="new-pin"
-                type="password"
                 inputMode="numeric"
                 maxLength={6}
                 value={newPin}
@@ -578,9 +577,8 @@ function SecuritySection() {
               />
             </Field>
             <Field label="تأكيد الرمز" htmlFor="confirm-pin">
-              <Input
+              <PasswordInput
                 id="confirm-pin"
-                type="password"
                 inputMode="numeric"
                 maxLength={6}
                 value={confirmPin}
@@ -736,7 +734,7 @@ function StorageSection() {
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas">
               <div
-                className={`h-full rounded-full ${isStorageLow(estimate) ? 'bg-danger' : 'bg-ink'}`}
+                className={`h-full rounded-full ${isStorageLow(estimate) ? 'bg-danger' : 'bg-solid'}`}
                 style={{ width: `${Math.max(2, estimate.percent)}%` }}
               />
             </div>
@@ -744,7 +742,7 @@ function StorageSection() {
         )}
 
         {isStorageLow(estimate) && (
-          <div className="rounded-xl border border-danger/25 bg-danger-soft px-3 py-2.5 text-[12.5px] font-semibold text-[#912018]">
+          <div className="rounded-xl border border-danger/25 bg-danger-soft px-3 py-2.5 text-[12.5px] font-semibold text-danger-ink">
             المساحة تقترب من الامتلاء ({Math.round(estimate.percent)}%). صدّر نسخة احتياطية الآن من صفحة النسخ
             الاحتياطي قبل أن يرفض المتصفح حفظ بيانات جديدة.
           </div>

@@ -35,7 +35,7 @@ function LedgerList({ rows, emptyText, base, buckets }) {
     <ul className="divide-y divide-line">
       {rows.slice(0, 12).map((row) => (
         <li key={row.party.id} className="flex items-center justify-between gap-3 px-5 py-3">
-          <Link to={base} className="min-w-0 flex-1">
+          <Link to={base} className="min-w-0 flex-1 rounded-lg transition-opacity hover:opacity-80">
             <p className="truncate text-[14px] font-semibold text-ink">{row.party.name}</p>
             <p className="truncate text-[11.5px] text-muted">
               فواتير {money(row.invoiced)} • مدفوع {money(row.paid)}
@@ -103,7 +103,7 @@ export function DebtsPage() {
             title="عملاء مدينون لنا"
             icon={HandCoins}
             action={
-              <Link to="/customers" className="flex items-center gap-1 text-[12.5px] font-semibold text-walnut">
+              <Link to="/customers" className="flex items-center gap-1 rounded-lg text-[12.5px] font-semibold text-walnut transition-colors hover:text-walnut-hover hover:underline">
                 العملاء
                 <ArrowLeft size={14} />
               </Link>
@@ -130,7 +130,7 @@ export function DebtsPage() {
             title="موردون ندين لهم"
             icon={ReceiptText}
             action={
-              <Link to="/suppliers" className="flex items-center gap-1 text-[12.5px] font-semibold text-walnut">
+              <Link to="/suppliers" className="flex items-center gap-1 rounded-lg text-[12.5px] font-semibold text-walnut transition-colors hover:text-walnut-hover hover:underline">
                 الموردون
                 <ArrowLeft size={14} />
               </Link>

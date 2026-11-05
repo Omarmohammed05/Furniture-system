@@ -119,7 +119,7 @@ function LowStockCard({ lowStock, quantity }) {
               </div>
               <span
                 className={`tabular rounded-full px-2.5 py-0.5 text-[12px] font-bold ${
-                  item.isOut ? 'bg-danger-soft text-[#912018]' : 'bg-warn-soft text-[#93370d]'
+                  item.isOut ? 'bg-danger-soft text-danger-ink' : 'bg-warn-soft text-warn-ink'
                 }`}
               >
                 {quantity(item.stock)}

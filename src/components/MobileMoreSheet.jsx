@@ -20,7 +20,7 @@ export function MobileMoreSheet({ open, onClose, groups }) {
 
   return (
     <div className="no-print fixed inset-0 z-50 lg:hidden">
-      <button type="button" aria-label="إغلاق القائمة" onClick={onClose} className="absolute inset-0 bg-ink/40" />
+      <button type="button" aria-label="إغلاق القائمة" onClick={onClose} className="absolute inset-0 bg-black/50" />
       <div
         role="dialog"
         aria-modal="true"
@@ -54,7 +54,7 @@ export function MobileMoreSheet({ open, onClose, groups }) {
                       onClick={onClose}
                       className={({ isActive }) =>
                         `flex min-h-11 items-center gap-3 rounded-xl px-3 text-[14.5px] font-semibold transition-colors ${
-                          isActive ? 'bg-ink text-white' : 'text-ink hover:bg-canvas'
+                          isActive ? 'bg-solid text-on-solid' : 'text-ink hover:bg-canvas'
                         }`
                       }
                     >

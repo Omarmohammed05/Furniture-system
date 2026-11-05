@@ -10,8 +10,8 @@ const ICONS = {
 }
 
 const TONES = {
-  success: 'border-success/20 bg-success-soft text-[#05603a]',
-  error: 'border-danger/20 bg-danger-soft text-[#912018]',
+  success: 'border-success/20 bg-success-soft text-success-ink',
+  error: 'border-danger/20 bg-danger-soft text-danger-ink',
   info: 'border-line bg-surface text-ink',
 }
 
