@@ -2,7 +2,7 @@
  * Purchase invoices (M4): raw materials come in, the supplier balance goes up
  * and any money paid at creation is recorded as a payment out.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { todayIso } from '../lib/dates'
 import { assertValid } from '../lib/errors'
 import { statusFor } from '../lib/invoiceStatus'

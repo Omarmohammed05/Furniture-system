@@ -3,7 +3,7 @@
  *   customer = opening + sales − receipts      (positive: they owe us)
  *   supplier = opening + purchases − payments  (positive: we owe them)
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 
 function sum(rows, pick) {
   return rows.reduce((total, row) => total + (Number(pick(row)) || 0), 0)

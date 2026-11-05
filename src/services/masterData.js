@@ -2,7 +2,7 @@
  * Small editable lists: item categories, expense categories and units.
  * Items and units that are already used by an item cannot be archived.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { assertValid } from '../lib/errors'
 import { archiveRecord, newRecord, restoreRecord, touchRecord } from '../lib/records'
 import { makeActivity } from './activity'

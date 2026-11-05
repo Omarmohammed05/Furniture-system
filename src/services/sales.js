@@ -2,7 +2,7 @@
  * Sales invoices (M5): stock out, customer debt up, optional down payment and
  * installment plan. Every write happens inside one transaction (rule 3).
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { addDays, todayIso } from '../lib/dates'
 import { assertValid } from '../lib/errors'
 import { statusFor } from '../lib/invoiceStatus'

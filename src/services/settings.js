@@ -3,7 +3,8 @@
  * Stored as one row per section in the `settings` table.
  */
 import { SCHEMA_VERSION } from '../data/db'
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
+import { setActiveDeviceId } from '../data/recordMeta'
 import { APP_VERSION } from '../lib/appInfo'
 import { mergeDeep } from '../lib/objects'
 import { isoNow } from '../lib/records'
@@ -60,6 +61,7 @@ export async function getSettings() {
   const stored = {}
   for (const row of rows) stored[row.key] = row.value
   cache = mergeDeep(DEFAULT_SETTINGS, stored)
+  setActiveDeviceId(cache.app.deviceId || 'A')
   return cache
 }
 
@@ -90,6 +92,7 @@ export async function updateSettings(patch, { note = '' } = {}) {
     }
   })
 
+  setActiveDeviceId(next.app.deviceId || 'A')
   cache = next
   return next
 }
@@ -114,6 +117,8 @@ export async function completeSetup({ shopName, phone = '', address = '', logoDa
     numbering: { deviceCode: code },
     security: { pinSalt: salt, pinHash: hash, pinLength: String(pin).length },
   })
+
+  setActiveDeviceId(code)
 
   await repo.transaction(
     'rw',

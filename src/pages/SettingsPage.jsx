@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BadgeCheck,
+  CloudUpload,
   Coins,
   HardDriveDownload,
   Hash,
@@ -23,6 +24,7 @@ import { getStorageEstimate, isStoragePersisted, requestPersistentStorage } from
 import { APP_VERSION } from '../lib/appInfo'
 import { SCHEMA_VERSION } from '../data/db'
 import { DIGIT_STYLES, localizeDigits } from '../lib/digits'
+import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card, CardHeader } from '../components/ui/Card'
 import { Field, Input, Select, Textarea } from '../components/ui/Field'
@@ -649,6 +651,36 @@ function BackupSettingsSection() {
   )
 }
 
+/* ---------- cloud backup (coming later) ---------- */
+
+function CloudBackupSection() {
+  return (
+    <Card>
+      <CardHeader
+        icon={CloudUpload}
+        title="النسخ الاحتياطي السحابي"
+        description="نسخة على الإنترنت تُستعاد من أي جهاز. غير متاح في هذا الإصدار."
+        action={<Badge tone="sand">قريباً</Badge>}
+      />
+      <div className="space-y-4 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[13px] leading-6 text-muted">
+            سيتم رفع نسخة كاملة من بياناتك تلقائياً، واستعادتها على جهاز جديد بنفس الرقم السري.
+          </p>
+          <Button variant="secondary" disabled aria-disabled="true">
+            <CloudUpload size={16} />
+            قريباً
+          </Button>
+        </div>
+
+        <p className="rounded-xl bg-canvas px-3 py-2.5 text-[12.5px] leading-6 text-muted">
+          حتى ذلك الحين استخدم النسخة الاحتياطية العادية: ملف واحد يحفظ كل البيانات ويعمل بدون إنترنت.
+        </p>
+      </div>
+    </Card>
+  )
+}
+
 /* ---------- storage ---------- */
 
 function formatBytes(bytes) {
@@ -772,6 +804,7 @@ export function SettingsPage() {
       <StockSection />
       <SecuritySection />
       <BackupSettingsSection />
+      <CloudBackupSection />
       <StorageSection />
       <AboutSection />
     </div>

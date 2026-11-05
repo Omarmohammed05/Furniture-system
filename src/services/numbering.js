@@ -3,7 +3,7 @@
  * Numbers are handed out by a counter row and are never reused, even after a
  * void, because the counter only ever moves forward.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { getSettings } from './settings'
 
 export function formatInvoiceNumber({ prefix, deviceCode, sequence }) {

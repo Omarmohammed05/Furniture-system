@@ -3,7 +3,7 @@
  * shop that is not a purchase invoice. Voided rows stay visible in the list but
  * are excluded from every total.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { todayIso } from '../lib/dates'
 import { fromMinor, toMinor } from '../lib/money'
 import { newRecord, touchRecord } from '../lib/records'

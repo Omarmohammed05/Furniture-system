@@ -2,7 +2,7 @@
  * Customers and suppliers share one shape, so they share one service.
  * kind: 'customers' | 'suppliers'
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { assertValid } from '../lib/errors'
 import { toMinor } from '../lib/money'
 import { archiveRecord, newRecord, restoreRecord, touchRecord } from '../lib/records'

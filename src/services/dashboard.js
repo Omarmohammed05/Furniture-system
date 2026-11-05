@@ -2,7 +2,7 @@
  * Dashboard figures (M11). Everything is read from the documents and ledgers —
  * nothing is cached or typed by hand, so the numbers always match the screens.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { currentMonth, monthRange, todayIso } from '../lib/dates'
 import { getBalancesSummary } from './balances'
 import { listLowStock } from './inventory'

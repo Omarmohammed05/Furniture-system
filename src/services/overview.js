@@ -1,5 +1,5 @@
 /** Read-only totals used by the dashboard and the data hub. */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { listActivity } from './activity'
 
 function activeCount(rows) {

@@ -5,7 +5,7 @@
  * goes below zero — whatever is left stays outstanding on the advance.
  * A paid slip is locked; a draft slip is refreshed by generatePayroll(month).
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { todayIso } from '../lib/dates'
 import { fromMinor, toMinor } from '../lib/money'
 import { newRecord, touchRecord } from '../lib/records'

@@ -1,4 +1,4 @@
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { isoNow } from '../lib/records'
 
 export function makeActivity({

@@ -1,8 +1,33 @@
 /**
  * LocalRepository — the Dexie implementation of the repository interface.
  * This is the only module that talks to the database engine.
+ *
+ * Writes go through `withRecordMeta`, so every row lands with id / createdAt /
+ * updatedAt / deletedAt / deviceId no matter which service created it, and the
+ * append-only ledgers reject updates and deletes.
  */
 import { db } from './db'
+import { assertWritable, identityOf, isAppendOnly, withRecordMeta } from './recordMeta'
+
+/**
+ * Reads the row a write is about to replace. Only needed for append-only
+ * tables (where an existing row is an error) and for rows that arrive without
+ * metadata, so ordinary writes cost no extra read.
+ */
+function needsPrevious(table, record) {
+  return (
+    isAppendOnly(table) ||
+    !record?.createdAt ||
+    record?.deletedAt === undefined ||
+    !record?.deviceId
+  )
+}
+
+async function prepare(table, record) {
+  const existing = needsPrevious(table, record) ? await db.table(table).get(identityOf(table, record)) : null
+  assertWritable(table, record, existing)
+  return withRecordMeta(table, record, { previous: existing })
+}
 
 export const localRepository = {
   table(name) {
@@ -35,12 +60,40 @@ export const localRepository = {
     return db.table(name).count()
   },
 
-  put(name, record) {
-    return db.table(name).put(record)
+  async put(name, record) {
+    return db.table(name).put(await prepare(name, record))
   },
 
-  bulkPut(name, records) {
-    return db.table(name).bulkPut(records)
+  async bulkPut(name, records) {
+    const rows = records || []
+    if (!rows.length) return []
+
+    const handle = db.table(name)
+    let existingById = new Map()
+    if (isAppendOnly(name)) {
+      const ids = rows.map((row) => identityOf(name, row)).filter(Boolean)
+      const existing = ids.length ? await handle.bulkGet(ids) : []
+      existingById = new Map(existing.filter(Boolean).map((row) => [identityOf(name, row), row]))
+    }
+
+    const prepared = []
+    for (const row of rows) {
+      const previous = existingById.get(identityOf(name, row)) || null
+      assertWritable(name, row, previous)
+      prepared.push(withRecordMeta(name, row, { previous }))
+    }
+    return handle.bulkPut(prepared)
+  },
+
+  /**
+   * Hard delete, for rows that carry no ledger meaning (a payroll adjustment
+   * typed by mistake). Business rows are archived instead — `deletedAt` is
+   * what the future sync needs to propagate a deletion.
+   */
+  async delete(name, id) {
+    const existing = await db.table(name).get(id)
+    assertWritable(name, { id }, existing)
+    await db.table(name).delete(id)
   },
 
   transaction(mode, tables, fn) {

@@ -7,7 +7,7 @@
  * Documents dated before `from` are folded into the opening balance, so the
  * running balance always starts from what was owed on the first day shown.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 
 function signed(entry, isCustomer) {
   return isCustomer ? entry.debit - entry.credit : entry.credit - entry.debit

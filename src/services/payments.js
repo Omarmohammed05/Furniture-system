@@ -2,7 +2,7 @@
  * Payments, receipts and installments (M6). Every payment is one ledger row;
  * invoice balances and installment statuses are derived from those rows.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { todayIso } from '../lib/dates'
 import { statusFor } from '../lib/invoiceStatus'
 import { fromMinor, toMinor } from '../lib/money'

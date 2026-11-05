@@ -6,7 +6,7 @@
  * current data, then replaces everything inside ONE transaction.
  */
 import { SCHEMA_VERSION, TABLE_NAMES } from '../data/db'
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { sha256Hex } from '../lib/checksum'
 import { downloadJson, readFileText } from '../lib/files'
 import { isoNow } from '../lib/records'
@@ -89,7 +89,10 @@ export async function validateBackupPayload(payload) {
   if (payload.format !== BACKUP_FORMAT) {
     return { ok: false, error: 'هذا الملف ليس نسخة احتياطية من «نظام المعرض»' }
   }
-  if (Number(payload.schemaVersion) !== SCHEMA_VERSION) {
+  // Older backups are accepted: the repository fills in any metadata a row of an
+  // older schema is missing as it is written back.
+  const fileVersion = Number(payload.schemaVersion)
+  if (!Number.isInteger(fileVersion) || fileVersion < 1 || fileVersion > SCHEMA_VERSION) {
     return { ok: false, error: `إصدار الملف (${payload.schemaVersion}) غير مدعوم في هذا الإصدار من التطبيق` }
   }
   if (!payload.tables || typeof payload.tables !== 'object') {

@@ -10,7 +10,7 @@
  *     sections: [{ title, columns: [{ key, label, type }], rows, totals }] }
  * type: text | money | qty | count | date | month
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { todayIso } from '../lib/dates'
 import { remainingOf } from '../lib/invoiceStatus'
 import { getStockMap, movementLabel, roundQty } from './inventory'

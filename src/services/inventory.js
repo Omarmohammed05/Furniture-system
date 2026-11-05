@@ -3,7 +3,7 @@
  * movements, never a number stored on the item. Voiding or editing an invoice
  * appends reversing movements, so history stays complete.
  */
-import { localRepository as repo } from '../data/localRepository'
+import { repository as repo } from '../data/repository'
 import { assertValid } from '../lib/errors'
 import { todayIso } from '../lib/dates'
 import { toQuantity } from '../lib/money'
