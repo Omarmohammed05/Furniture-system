@@ -116,7 +116,7 @@ export async function listLowStock() {
  * balance the item really had on each date.
  */
 export async function getItemMovements(itemId, { from = '', to = '' } = {}) {
-  const rows = (await repo.all('stock_movements')).filter((row) => row.itemId === itemId).sort(sortMovements)
+  const rows = (await repo.byIndex('stock_movements', 'itemId', itemId)).sort(sortMovements)
   let balance = 0
   const withBalance = rows.map((row) => {
     balance = roundQty(balance + (Number(row.qty) || 0))
@@ -302,8 +302,8 @@ export async function recordProduction({ productId, qty, date, materials = [], n
 
 /** Reverses every movement of one document (used by void and edit). */
 export async function reverseDocumentMovements({ refType, refId, deviceId, note }) {
-  const movements = (await repo.all('stock_movements')).filter(
-    (row) => row.refType === refType && row.refId === refId && row.type !== 'void_reversal',
+  const movements = (await repo.byIndex('stock_movements', '[refType+refId]', [refType, refId])).filter(
+    (row) => row.type !== 'void_reversal',
   )
   if (!movements.length) return []
   const reversals = movements.map((row) =>

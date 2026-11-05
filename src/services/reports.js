@@ -31,6 +31,19 @@ function notVoided(rows) {
   return rows.filter((row) => !row.voidedAt)
 }
 
+/**
+ * Lines belonging to a set of invoices, read through the `invoiceId` index in
+ * batches — so per-product reports never scan the whole line table.
+ */
+async function linesOfInvoices(table, invoiceIds) {
+  const ids = [...invoiceIds]
+  if (!ids.length) return []
+  const batches = []
+  for (let index = 0; index < ids.length; index += 400) batches.push(ids.slice(index, index + 400))
+  const parts = await Promise.all(batches.map((batch) => repo.byIndexAny(table, 'invoiceId', batch)))
+  return parts.flat()
+}
+
 /** Money before VAT, for one invoice. */
 export function exVat(invoice) {
   return (Number(invoice.total) || 0) - (Number(invoice.vat) || 0)
@@ -139,7 +152,7 @@ function salesByParty(invoices) {
 
 async function salesByProduct(invoices) {
   const ids = new Set(invoices.map((invoice) => invoice.id))
-  const lines = (await repo.all('sales_lines')).filter((line) => ids.has(line.invoiceId))
+  const lines = await linesOfInvoices('sales_lines', ids)
 
   const rows = groupRows(
     lines,
@@ -188,7 +201,7 @@ export async function buildSalesReport({ from, to, groupBy = 'day' }) {
 export async function buildTopProductsReport({ from, to, limit = 15 }) {
   const invoices = notVoided(await rangedRows('sales_invoices', from, to))
   const ids = new Set(invoices.map((invoice) => invoice.id))
-  const lines = (await repo.all('sales_lines')).filter((line) => ids.has(line.invoiceId))
+  const lines = await linesOfInvoices('sales_lines', ids)
 
   const rows = groupRows(
     lines,
@@ -275,7 +288,7 @@ export async function buildPurchasesReport({ from, to, groupBy = 'supplier' }) {
 
   if (groupBy === 'item') {
     const ids = new Set(invoices.map((invoice) => invoice.id))
-    const lines = (await repo.all('purchase_lines')).filter((line) => ids.has(line.invoiceId))
+    const lines = await linesOfInvoices('purchase_lines', ids)
     const rows = groupRows(
       lines,
       (line) => line.itemId || line.name,

@@ -91,9 +91,40 @@ Fixed in code:
 
 Still open (unchanged):
 
-- Whole-table reads remain in balances, statements, aging, stock totals and invoice detail; only invoice lists are paginated, so the 5,000-invoice acceptance item is unproven.
+- Whole-table reads remain in balances, statements, aging, stock totals and invoice detail; only invoice lists are paginated, so the 5,000-invoice acceptance item is unproven. (Superseded by the read-path pass below; the timing item stays unproven.)
 - The service worker is still registered for production builds only (`UpdateBanner`), so airplane-mode install cannot be exercised in the dev preview.
 - `markInstallmentPaid(id, paymentId)` remains implemented as `payInstallment(id, { method, date })`; `getItemMovements` and `getAging` now match the catalog.
+
+## Resolution log — 2026-11-05 (read paths)
+
+The "whole-table reads" item is closed at the query level: the repository
+interface gained `byIndex`, `byIndexAny` and `bulkGet`, and the screens that
+used to read whole tables now use the indexes the schema already declared.
+
+- Balances (`getPartyBalances`) aggregate invoices and payments in one pass per
+  table instead of re-scanning them for every party.
+- Statements read only that party's invoices (`customerId` / `supplierId`) and
+  payments (`[partyType+partyId]`).
+- Invoice detail reads its own lines (`invoiceId`), payments (`invoiceId`) and
+  installments (`salesInvoiceId`); edit/void no longer scan those tables either.
+- Installment lists read only the statuses they show (`status`) and fetch just
+  those invoices by id; dashboard overdue count uses the same path.
+- Item movements read one item's ledger (`itemId`); void reversal reads one
+  document's movements (`[refType+refId]`).
+- Per-product reports read the lines of the invoices in range, in batches,
+  instead of the whole line table.
+- Still whole-table by nature: aging (every unpaid invoice), stock totals (the
+  movement ledger) and the payroll advance list — each is one linear pass.
+
+Verification this pass (1055 px preview, seeded through the UI): purchase in →
+sales invoice on a 3-installment plan → invoice detail (lines, payments,
+installments, PDF/صورة/تكرار actions) → duplicate prefills party, item and
+quantity → statement shows the invoice row and balance → debts shows the
+2,500 receivable in the 0–30 bucket → installments lists 3 and the «خلال
+الأسبوع» filter runs → activity log shows the sale → dashboard totals match →
+voiding the invoice shows the refund banner and the item ledger reads
++10 / −2 / +2 with balances 10 / 8 / 10 (stock back to 10). No console error.
+The 5,000-invoice timing item itself is still unmeasured.
 
 **Verification coverage of this review**
 - Static: every bullet above is backed by the named file.

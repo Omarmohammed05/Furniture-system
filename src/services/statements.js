@@ -49,21 +49,24 @@ export async function getStatement(kind, partyId, { from = '', to = '' } = {}) {
   if (!isCustomer && kind !== 'suppliers') throw new Error('نوع حساب غير معروف')
   if (!partyId) return null
 
+  // Both reads use an index on the party, so a statement never scans the
+  // whole invoice and payment history.
   const [party, invoices, payments] = await Promise.all([
     repo.get(isCustomer ? 'customers' : 'suppliers', partyId),
-    repo.all(isCustomer ? 'sales_invoices' : 'purchase_invoices'),
-    repo.all('payments'),
+    repo.byIndex(
+      isCustomer ? 'sales_invoices' : 'purchase_invoices',
+      isCustomer ? 'customerId' : 'supplierId',
+      partyId,
+    ),
+    repo.byIndex('payments', '[partyType+partyId]', [kind, partyId]),
   ])
   if (!party) return null
 
   const entries = [
     ...invoices
       .filter((invoice) => !invoice.voidedAt)
-      .filter((invoice) => (isCustomer ? invoice.customerId : invoice.supplierId) === partyId)
       .map((invoice) => invoiceEntry(invoice, isCustomer)),
-    ...payments
-      .filter((payment) => payment.partyType === kind && payment.partyId === partyId)
-      .map((payment) => paymentEntry(payment)),
+    ...payments.map((payment) => paymentEntry(payment)),
   ].sort((a, b) => {
     const byDate = String(a.date).localeCompare(String(b.date))
     return byDate !== 0 ? byDate : String(a.at).localeCompare(String(b.at))

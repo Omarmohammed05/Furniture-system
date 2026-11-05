@@ -5,10 +5,6 @@
  */
 import { repository as repo } from '../data/repository'
 
-function sum(rows, pick) {
-  return rows.reduce((total, row) => total + (Number(pick(row)) || 0), 0)
-}
-
 export async function getPartyBalances(kind) {
   const isCustomer = kind === 'customers'
   const [parties, invoices, payments] = await Promise.all([
@@ -17,15 +13,27 @@ export async function getPartyBalances(kind) {
     repo.all('payments'),
   ])
 
-  const invoiceRows = invoices.filter((invoice) => !invoice.voidedAt)
-  const paymentRows = payments.filter((payment) => payment.partyType === kind)
+  // One pass per table instead of one scan per party: balances stay instant
+  // with thousands of invoices and hundreds of accounts.
+  const invoicedByParty = new Map()
+  for (const invoice of invoices) {
+    if (invoice.voidedAt) continue
+    const partyId = isCustomer ? invoice.customerId : invoice.supplierId
+    if (!partyId) continue
+    invoicedByParty.set(partyId, (invoicedByParty.get(partyId) || 0) + (Number(invoice.total) || 0))
+  }
+
+  const paidByParty = new Map()
+  for (const payment of payments) {
+    if (payment.partyType !== kind || !payment.partyId) continue
+    paidByParty.set(payment.partyId, (paidByParty.get(payment.partyId) || 0) + (Number(payment.amount) || 0))
+  }
 
   const map = new Map()
-  for (const party of parties.filter((row) => !row.deletedAt)) {
-    const own = invoiceRows.filter((invoice) => (isCustomer ? invoice.customerId : invoice.supplierId) === party.id)
-    const paid = paymentRows.filter((payment) => payment.partyId === party.id)
-    const total = sum(own, (invoice) => invoice.total)
-    const received = sum(paid, (payment) => payment.amount)
+  for (const party of parties) {
+    if (party.deletedAt) continue
+    const total = invoicedByParty.get(party.id) || 0
+    const received = paidByParty.get(party.id) || 0
     map.set(party.id, {
       party,
       invoiced: total,

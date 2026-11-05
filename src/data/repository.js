@@ -9,6 +9,9 @@
  *   all(table)                      -> record[]
  *   recent(table, index, limit)     -> newest records by one index
  *   byRange(table, index, low, high)-> records inside one index range
+ *   byIndex(table, index, value)    -> records where one index equals a value
+ *   byIndexAny(table, index, values)-> records where one index is in a list
+ *   bulkGet(table, ids)             -> records for a list of ids
  *   count(table)                    -> number
  *   put(table, record)              -> key       (create or update)
  *   bulkPut(table, records)         -> keys
@@ -32,6 +35,9 @@ export const REPOSITORY_METHODS = Object.freeze([
   'all',
   'recent',
   'byRange',
+  'byIndex',
+  'byIndexAny',
+  'bulkGet',
   'count',
   'put',
   'bulkPut',

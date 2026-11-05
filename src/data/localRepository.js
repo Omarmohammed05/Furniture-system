@@ -56,6 +56,29 @@ export const localRepository = {
     return db.table(name).toArray()
   },
 
+  /**
+   * Index equality — the cheap way to read one party's, one item's or one
+   * document's rows instead of the whole table. Compound indexes take an
+   * array value, e.g. `byIndex('payments', '[partyType+partyId]', [kind, id])`.
+   */
+  byIndex(name, index, value) {
+    return db.table(name).where(index).equals(value).toArray()
+  },
+
+  /** Same, for a list of keys (one invoice's lines, the statuses still owed). */
+  byIndexAny(name, index, values) {
+    const keys = [...new Set(values || [])].filter((key) => key !== undefined && key !== null && key !== '')
+    if (!keys.length) return Promise.resolve([])
+    return db.table(name).where(index).anyOf(keys).toArray()
+  },
+
+  /** Records for a list of ids; missing ids are simply absent from the result. */
+  bulkGet(name, ids) {
+    const keys = [...new Set(ids || [])].filter(Boolean)
+    if (!keys.length) return Promise.resolve([])
+    return db.table(name).bulkGet(keys)
+  },
+
   count(name) {
     return db.table(name).count()
   },

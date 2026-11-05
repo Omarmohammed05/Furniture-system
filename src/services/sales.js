@@ -206,7 +206,7 @@ export async function updateSalesInvoice(id, input) {
   if (!existing) throw new Error('الفاتورة غير موجودة')
   if (existing.voidedAt) throw new Error('لا يمكن تعديل فاتورة ملغاة')
 
-  const installments = (await repo.all('installments')).filter((row) => row.salesInvoiceId === id)
+  const installments = await repo.byIndex('installments', 'salesInvoiceId', id)
   if (installments.some((row) => row.status === 'paid' || (row.paidAmount || 0) > 0)) {
     throw new Error('لا يمكن تعديل فاتورة سُدّدت بعض أقساطها')
   }
@@ -215,8 +215,8 @@ export async function updateSalesInvoice(id, input) {
   const built = await buildSale(input, settings)
   assertValid(built.errors)
 
-  const payments = (await repo.all('payments')).filter(
-    (row) => row.invoiceType === 'sale' && row.invoiceId === id,
+  const payments = (await repo.byIndex('payments', 'invoiceId', id)).filter(
+    (row) => row.invoiceType === 'sale',
   )
   const paid = Math.min(
     payments.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
@@ -343,8 +343,8 @@ export async function voidSalesInvoice(id, reason) {
       deviceId,
       note: `إلغاء فاتورة ${invoice.number} — ${text}`,
     })
-    const open = (await repo.all('installments')).filter(
-      (row) => row.salesInvoiceId === id && row.status !== 'paid',
+    const open = (await repo.byIndex('installments', 'salesInvoiceId', id)).filter(
+      (row) => row.status !== 'paid',
     )
     if (open.length) {
       await repo.bulkPut(
@@ -368,20 +368,20 @@ export async function voidSalesInvoice(id, reason) {
 export async function getSalesInvoice(id) {
   const invoice = await repo.get('sales_invoices', id)
   if (!invoice) return null
-  const [lines, payments, installments] = await Promise.all([
-    repo.all('sales_lines'),
-    repo.all('payments'),
-    repo.all('installments'),
+  // Indexed by the foreign key, so opening one invoice is independent of how
+  // many invoices the showroom has.
+  const [lines, invoicePayments, installments] = await Promise.all([
+    repo.byIndex('sales_lines', 'invoiceId', id),
+    repo.byIndex('payments', 'invoiceId', id),
+    repo.byIndex('installments', 'salesInvoiceId', id),
   ])
   return {
     invoice,
-    lines: lines.filter((row) => row.invoiceId === id).sort((a, b) => a.lineNo - b.lineNo),
-    payments: payments
-      .filter((row) => row.invoiceType === 'sale' && row.invoiceId === id)
+    lines: [...lines].sort((a, b) => a.lineNo - b.lineNo),
+    payments: invoicePayments
+      .filter((row) => row.invoiceType === 'sale')
       .sort((a, b) => String(b.date).localeCompare(String(a.date))),
-    installments: installments
-      .filter((row) => row.salesInvoiceId === id)
-      .sort((a, b) => a.seq - b.seq),
+    installments: [...installments].sort((a, b) => a.seq - b.seq),
   }
 }
 

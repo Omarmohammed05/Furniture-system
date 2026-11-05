@@ -35,8 +35,8 @@ async function refreshInvoice(invoiceType, invoiceId) {
   const invoice = await repo.get(table, invoiceId)
   if (!invoice) return null
   const direction = invoiceType === 'sale' ? 'in' : 'out'
-  const payments = (await repo.all('payments')).filter(
-    (row) => row.invoiceType === invoiceType && row.invoiceId === invoiceId && row.direction === direction,
+  const payments = (await repo.byIndex('payments', 'invoiceId', invoiceId)).filter(
+    (row) => row.invoiceType === invoiceType && row.direction === direction,
   )
   const paid = payments.reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
   const updated = touchRecord(invoice, {
@@ -49,8 +49,8 @@ async function refreshInvoice(invoiceType, invoiceId) {
 
 /** B13: a payment covers the oldest due installment first. */
 async function applyToInstallments(invoiceId, amount) {
-  const open = (await repo.all('installments'))
-    .filter((row) => row.salesInvoiceId === invoiceId && row.status !== 'cancelled' && row.status !== 'paid')
+  const open = (await repo.byIndex('installments', 'salesInvoiceId', invoiceId))
+    .filter((row) => row.status !== 'cancelled' && row.status !== 'paid')
     .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)) || a.seq - b.seq)
 
   let left = amount
@@ -195,10 +195,17 @@ export async function payInstallment(id, { method = 'cash', date } = {}) {
 }
 
 export async function listInstallments({ filter = 'open' } = {}) {
-  const [rows, invoices] = await Promise.all([repo.all('installments'), repo.all('sales_invoices')])
-  const byId = new Map(invoices.map((invoice) => [invoice.id, invoice]))
+  // `status` is indexed, so the screen reads only the installments it shows
+  // and then fetches just those invoices by id.
+  const wantsDue = filter === 'open' || filter === 'overdue' || filter === 'week'
+  const rows =
+    filter === 'paid'
+      ? await repo.byIndex('installments', 'status', 'paid')
+      : wantsDue
+        ? await repo.byIndex('installments', 'status', 'due')
+        : await repo.all('installments')
 
-  return rows
+  const selected = rows
     .filter((row) => (filter === 'all' ? true : row.status !== 'cancelled'))
     .filter((row) => {
       if (filter === 'overdue') return isOverdue(row)
@@ -210,6 +217,11 @@ export async function listInstallments({ filter = 'open' } = {}) {
       if (filter === 'open') return row.status !== 'paid'
       return true
     })
+
+  const invoices = await repo.bulkGet('sales_invoices', selected.map((row) => row.salesInvoiceId))
+  const byId = new Map(invoices.map((invoice) => [invoice.id, invoice]))
+
+  return selected
     .map((row) => ({ ...row, invoice: byId.get(row.salesInvoiceId) || null }))
     .sort((a, b) => String(a.dueDate).localeCompare(String(b.dueDate)))
 }
@@ -233,8 +245,8 @@ export async function listPayments({ direction = 'all', search = '', from = '', 
 }
 
 export async function listInvoicePayments(invoiceType, invoiceId) {
-  const rows = await repo.all('payments')
+  const rows = await repo.byIndex('payments', 'invoiceId', invoiceId)
   return rows
-    .filter((row) => row.invoiceType === invoiceType && row.invoiceId === invoiceId)
+    .filter((row) => row.invoiceType === invoiceType)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))
 }

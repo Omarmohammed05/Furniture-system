@@ -162,8 +162,8 @@ export async function updatePurchaseInvoice(id, input) {
   const built = await buildPurchase(input, settings)
   assertValid(built.errors)
 
-  const payments = (await repo.all('payments')).filter(
-    (row) => row.invoiceType === 'purchase' && row.invoiceId === id,
+  const payments = (await repo.byIndex('payments', 'invoiceId', id)).filter(
+    (row) => row.invoiceType === 'purchase',
   )
   const paid = Math.min(
     payments.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
@@ -260,12 +260,15 @@ export async function voidPurchaseInvoice(id, reason) {
 export async function getPurchaseInvoice(id) {
   const invoice = await repo.get('purchase_invoices', id)
   if (!invoice) return null
-  const [lines, payments] = await Promise.all([repo.all('purchase_lines'), repo.all('payments')])
+  const [lines, invoicePayments] = await Promise.all([
+    repo.byIndex('purchase_lines', 'invoiceId', id),
+    repo.byIndex('payments', 'invoiceId', id),
+  ])
   return {
     invoice,
-    lines: lines.filter((row) => row.invoiceId === id).sort((a, b) => a.lineNo - b.lineNo),
-    payments: payments
-      .filter((row) => row.invoiceType === 'purchase' && row.invoiceId === id)
+    lines: [...lines].sort((a, b) => a.lineNo - b.lineNo),
+    payments: invoicePayments
+      .filter((row) => row.invoiceType === 'purchase')
       .sort((a, b) => String(b.date).localeCompare(String(a.date))),
   }
 }
