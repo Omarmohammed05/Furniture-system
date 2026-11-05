@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import {
   BarChart3,
   Banknote,
   Boxes,
   CalendarClock,
+  ChevronsLeft,
+  ChevronsRight,
   Coins,
   Database,
   FileText,
@@ -28,6 +30,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../app/AuthContext'
 import { useSettings } from '../app/SettingsContext'
+import { useCollapsedSidebar } from '../hooks/useCollapsedSidebar'
 import { APP_VERSION } from '../lib/appInfo'
 import { BackupBadge } from './BackupBadge'
 import { BrandMark } from './BrandMark'
@@ -83,31 +86,50 @@ const MORE_GROUPS = [
   { title: 'النظام', items: SYSTEM_NAV },
 ]
 
-function SidebarLink({ item, onNavigate }) {
+function SidebarLink({ item, collapsed, onNavigate }) {
   const Icon = item.icon
   return (
     <NavLink
       to={item.to}
       end={item.end}
       onClick={onNavigate}
+      title={collapsed ? item.label : undefined}
       className={({ isActive }) =>
-        `flex min-h-11 items-center gap-3 rounded-xl px-3 text-[14.5px] font-semibold transition-colors ${
-          isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'
-        }`
+        `flex min-h-11 items-center gap-3 rounded-xl text-[14.5px] font-semibold transition-colors ${
+          collapsed ? 'justify-center px-0' : 'px-3'
+        } ${isActive ? 'bg-ink text-white' : 'text-muted hover:bg-canvas hover:text-ink'}`
       }
     >
-      <Icon size={19} aria-hidden="true" />
-      <span>{item.label}</span>
+      <Icon size={19} aria-hidden="true" className="shrink-0" />
+      <span className={collapsed ? 'sr-only' : 'truncate'}>{item.label}</span>
     </NavLink>
   )
+}
+
+function SidebarGroupTitle({ collapsed, children }) {
+  if (collapsed) return <div className="mx-4 my-2 border-t border-line" aria-hidden="true" />
+  return <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">{children}</div>
 }
 
 export function AppShell() {
   const { settings } = useSettings()
   const { lock } = useAuth()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [collapsed, toggleCollapsed] = useCollapsedSidebar()
   const shopName = settings?.profile?.shopName || 'نظام المعرض'
   const logo = settings?.profile?.logoDataUrl
+
+  useEffect(() => {
+    const onKey = (event) => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'b') return
+      const tag = event.target?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target?.isContentEditable) return
+      event.preventDefault()
+      toggleCollapsed()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [toggleCollapsed])
 
   return (
     <div className="min-h-dvh bg-canvas">
@@ -118,63 +140,108 @@ export function AppShell() {
         تخطَّ إلى المحتوى
       </a>
 
-      {/* Desktop right rail */}
-      <aside className="no-print fixed inset-y-0 right-0 z-40 hidden w-64 flex-col border-e border-line bg-surface lg:flex">
-        <div className="flex items-center gap-2.5 px-4 py-4">
+      {/* Desktop right rail — folds to an icon rail on request */}
+      <aside
+        id="app-sidebar"
+        className={`no-print fixed inset-y-0 right-0 z-40 hidden flex-col border-e border-line bg-surface transition-[width] duration-200 ease-out motion-reduce:transition-none lg:flex ${
+          collapsed ? 'w-[76px]' : 'w-64'
+        }`}
+      >
+        <div className={`flex items-center gap-2.5 py-4 ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
           {logo ? (
-            <img src={logo} alt="" className="h-9 w-9 rounded-xl border border-line object-contain" />
+            <img
+              src={logo}
+              alt=""
+              className="h-9 w-9 shrink-0 rounded-xl border border-line object-contain"
+            />
           ) : (
             <BrandMark size={36} />
           )}
-          <div className="min-w-0">
-            <p className="truncate text-[15px] font-bold text-ink">{shopName}</p>
-            <p className="text-[11px] font-semibold tracking-wide text-muted">إدارة المعرض</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-bold text-ink">{shopName}</p>
+              <p className="text-[11px] font-semibold tracking-wide text-muted">إدارة المعرض</p>
+            </div>
+          )}
         </div>
 
         <Link
           to="/sales/new"
-          className="mx-3 mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-walnut text-[14.5px] font-semibold text-white transition-colors hover:bg-[#7a4e2b]"
+          title={collapsed ? 'فاتورة بيع جديدة' : undefined}
+          className={`mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-walnut text-[14.5px] font-semibold text-white transition-colors hover:bg-[#7a4e2b] ${
+            collapsed ? 'mx-auto w-11' : 'mx-3'
+          }`}
         >
-          <PlusCircle size={18} aria-hidden="true" />
-          فاتورة بيع جديدة
+          <PlusCircle size={18} aria-hidden="true" className="shrink-0" />
+          <span className={collapsed ? 'sr-only' : ''}>فاتورة بيع جديدة</span>
         </Link>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-2 pb-3" aria-label="التنقل الرئيسي">
+        <nav
+          className="flex-1 space-y-1 overflow-y-auto px-2 pb-3"
+          aria-label="التنقل الرئيسي"
+        >
           {MAIN_NAV.map((item) => (
-            <SidebarLink key={item.to} item={item} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
           ))}
 
-          <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">العاملون والحسابات</div>
+          <SidebarGroupTitle collapsed={collapsed}>العاملون والحسابات</SidebarGroupTitle>
           {MONEY_NAV.map((item) => (
-            <SidebarLink key={item.to} item={item} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
           ))}
 
-          <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">البيانات الأساسية</div>
+          <SidebarGroupTitle collapsed={collapsed}>البيانات الأساسية</SidebarGroupTitle>
           {DATA_LINKS.map((item) => (
-            <SidebarLink key={item.to} item={item} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
           ))}
 
-          <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">النظام</div>
+          <SidebarGroupTitle collapsed={collapsed}>النظام</SidebarGroupTitle>
           {SYSTEM_NAV.map((item) => (
-            <SidebarLink key={item.to} item={item} />
+            <SidebarLink key={item.to} item={item} collapsed={collapsed} />
           ))}
         </nav>
 
-        <div className="border-t border-line px-3 py-3">
+        <div className={`border-t border-line py-3 ${collapsed ? 'px-2' : 'px-3'}`}>
           <button
             type="button"
             onClick={lock}
-            className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-[14px] font-semibold text-muted transition-colors hover:bg-canvas hover:text-ink"
+            title={collapsed ? 'قفل التطبيق' : undefined}
+            className={`flex min-h-11 w-full items-center gap-3 rounded-xl text-[14px] font-semibold text-muted transition-colors hover:bg-canvas hover:text-ink ${
+              collapsed ? 'justify-center px-0' : 'px-3'
+            }`}
           >
-            <Lock size={18} aria-hidden="true" />
-            <span>قفل التطبيق</span>
+            <Lock size={18} aria-hidden="true" className="shrink-0" />
+            <span className={collapsed ? 'sr-only' : ''}>قفل التطبيق</span>
           </button>
-          <p className="mt-1 px-3 text-[11px] text-muted">الإصدار {APP_VERSION}</p>
+
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-controls="app-sidebar"
+            title={collapsed ? 'فتح الشريط الجانبي (Ctrl+B)' : 'طيّ الشريط الجانبي (Ctrl+B)'}
+            className={`flex min-h-11 w-full items-center gap-3 rounded-xl text-[14px] font-semibold text-muted transition-colors hover:bg-canvas hover:text-ink ${
+              collapsed ? 'justify-center px-0' : 'px-3'
+            }`}
+          >
+            {collapsed ? (
+              <ChevronsLeft size={18} aria-hidden="true" className="shrink-0" />
+            ) : (
+              <ChevronsRight size={18} aria-hidden="true" className="shrink-0" />
+            )}
+            <span className={collapsed ? 'sr-only' : ''}>
+              {collapsed ? 'فتح الشريط الجانبي' : 'طيّ الشريط الجانبي'}
+            </span>
+          </button>
+
+          {!collapsed && <p className="mt-1 px-3 text-[11px] text-muted">الإصدار {APP_VERSION}</p>}
         </div>
       </aside>
 
-      <div className="lg:ps-64">
+      <div
+        className={`transition-[padding] duration-200 ease-out motion-reduce:transition-none ${
+          collapsed ? 'lg:ps-[76px]' : 'lg:ps-64'
+        }`}
+      >
         <header className="no-print sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
           <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-2.5">
