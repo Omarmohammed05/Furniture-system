@@ -149,22 +149,44 @@ export function AppShell() {
           collapsed ? 'w-[76px]' : 'w-64'
         }`}
       >
-        <div className={`flex items-center gap-2.5 py-4 ${collapsed ? 'justify-center px-0' : 'px-4'}`}>
-          {logo ? (
-            <img
-              src={logo}
-              alt=""
-              className="h-9 w-9 shrink-0 rounded-xl border border-line object-contain"
-            />
-          ) : (
-            <BrandMark size={36} />
-          )}
-          {!collapsed && (
-            <div className="min-w-0">
-              <p className="truncate text-[15px] font-bold text-ink">{shopName}</p>
-              <p className="text-[11px] font-semibold tracking-wide text-muted">إدارة المعرض</p>
-            </div>
-          )}
+        <div
+          className={`py-4 ${
+            collapsed ? 'flex flex-col items-center gap-2 px-0' : 'flex items-center gap-2 px-3'
+          }`}
+        >
+          <div className={`flex items-center gap-2.5 ${collapsed ? '' : 'min-w-0 flex-1'}`}>
+            {logo ? (
+              <img
+                src={logo}
+                alt=""
+                className="h-9 w-9 shrink-0 rounded-xl border border-line object-contain"
+              />
+            ) : (
+              <BrandMark size={36} />
+            )}
+            {!collapsed && (
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-bold text-ink">{shopName}</p>
+                <p className="text-[11px] font-semibold tracking-wide text-muted">إدارة المعرض</p>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-expanded={!collapsed}
+            aria-controls="app-sidebar"
+            aria-label={collapsed ? 'فتح الشريط الجانبي' : 'طيّ الشريط الجانبي'}
+            title={collapsed ? 'فتح الشريط الجانبي (Ctrl+B)' : 'طيّ الشريط الجانبي (Ctrl+B)'}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line text-muted transition-colors hover:bg-canvas hover:text-ink"
+          >
+            {collapsed ? (
+              <ChevronsLeft size={18} aria-hidden="true" />
+            ) : (
+              <ChevronsRight size={18} aria-hidden="true" />
+            )}
+          </button>
         </div>
 
         <Link
@@ -213,26 +235,6 @@ export function AppShell() {
           >
             <Lock size={18} aria-hidden="true" className="shrink-0" />
             <span className={collapsed ? 'sr-only' : ''}>قفل التطبيق</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-expanded={!collapsed}
-            aria-controls="app-sidebar"
-            title={collapsed ? 'فتح الشريط الجانبي (Ctrl+B)' : 'طيّ الشريط الجانبي (Ctrl+B)'}
-            className={`flex min-h-11 w-full items-center gap-3 rounded-xl text-[14px] font-semibold text-muted transition-colors hover:bg-canvas hover:text-ink ${
-              collapsed ? 'justify-center px-0' : 'px-3'
-            }`}
-          >
-            {collapsed ? (
-              <ChevronsLeft size={18} aria-hidden="true" className="shrink-0" />
-            ) : (
-              <ChevronsRight size={18} aria-hidden="true" className="shrink-0" />
-            )}
-            <span className={collapsed ? 'sr-only' : ''}>
-              {collapsed ? 'فتح الشريط الجانبي' : 'طيّ الشريط الجانبي'}
-            </span>
           </button>
 
           {!collapsed && <p className="mt-1 px-3 text-[11px] text-muted">الإصدار {APP_VERSION}</p>}
