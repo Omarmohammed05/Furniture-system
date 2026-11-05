@@ -13,6 +13,7 @@ import {
   Percent,
   Save,
   ShieldCheck,
+  Sparkles,
   Store,
 } from 'lucide-react'
 import { useAuth } from '../app/AuthContext'
@@ -20,6 +21,7 @@ import { useSettings } from '../app/SettingsContext'
 import { useToast } from '../app/ToastContext'
 import { setPin, verifyPin } from '../services/settings'
 import { backupStatus } from '../services/backup'
+import { loadDemoData } from '../services/demoData'
 import { getStorageEstimate, isStorageLow, isStoragePersisted, requestPersistentStorage } from '../services/storage'
 import { APP_VERSION } from '../lib/appInfo'
 import { SCHEMA_VERSION } from '../data/db'
@@ -679,6 +681,48 @@ function CloudBackupSection() {
   )
 }
 
+/* ---------- demo data ---------- */
+
+function DemoDataSection() {
+  const { refresh } = useSettings()
+  const toast = useToast()
+  const [busy, setBusy] = useState(false)
+
+  const load = async () => {
+    setBusy(true)
+    try {
+      const result = await loadDemoData()
+      await refresh()
+      toast.success(`تم تحميل ${result.items} صنف و${result.invoices} فاتورة — افتح الرئيسية`)
+    } catch (error) {
+      toast.error(error.message || 'تعذر تحميل البيانات التجريبية')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader
+        icon={Sparkles}
+        title="بيانات تجريبية"
+        description="أصناف وفواتير وعملاء ومرتبات جاهزة لتجربة النظام أو أخذ لقطات شاشة."
+      />
+      <div className="space-y-4 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[13px] leading-6 text-muted">
+            تُحمّل مرة واحدة على قاعدة بيانات فارغة، ولا تمس أي بيانات موجودة.
+          </p>
+          <Button variant="secondary" onClick={load} disabled={busy}>
+            <Sparkles size={16} />
+            {busy ? 'جارٍ التحميل…' : 'تحميل بيانات تجريبية'}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
 /* ---------- storage ---------- */
 
 function formatBytes(bytes) {
@@ -814,6 +858,7 @@ export function SettingsPage() {
       <BackupSettingsSection />
       <CloudBackupSection />
       <StorageSection />
+      <DemoDataSection />
       <AboutSection />
     </div>
   )
