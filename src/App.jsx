@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './app/AuthContext'
 import { AppShell } from './components/AppShell'
 import { BrandMark } from './components/BrandMark'
 import { UpdateBanner } from './components/UpdateBanner'
+import { InstallAppDialog } from './components/InstallAppDialog'
 import { ActivityPage } from './pages/ActivityPage'
 import { AdvancesPage } from './pages/AdvancesPage'
 import { BackupPage } from './pages/BackupPage'
@@ -96,6 +97,7 @@ export default function App() {
                 </Route>
               </Routes>
             </AppGate>
+            <InstallAppDialog />
             {import.meta.env.PROD && <UpdateBanner />}
           </HashRouter>
         </AuthProvider>

@@ -2,6 +2,14 @@ import { useEffect, useState } from 'react'
 
 const STANDALONE_QUERY = '(display-mode: standalone)'
 
+function detectIosStandaloneCandidate() {
+  if (typeof navigator === 'undefined') return false
+  const ua = navigator.userAgent
+  if (/iphone|ipad|ipod/i.test(ua)) return true
+  // iPadOS reports a desktop Safari agent; a touch screen gives it away.
+  return /macintosh/i.test(ua) && navigator.maxTouchPoints > 1
+}
+
 /**
  * Wraps the browser install prompt. Chromium fires `beforeinstallprompt` only
  * when the app is installable (manifest + service worker), so the button is
@@ -13,6 +21,7 @@ export function useInstallPrompt() {
     if (typeof window === 'undefined') return false
     return Boolean(window.matchMedia?.(STANDALONE_QUERY)?.matches || window.navigator.standalone === true)
   })
+  const [isIos] = useState(detectIosStandaloneCandidate)
 
   useEffect(() => {
     const onPrompt = (event) => {
@@ -39,5 +48,5 @@ export function useInstallPrompt() {
     return choice?.outcome || 'dismissed'
   }
 
-  return { canInstall: Boolean(promptEvent), installed, install }
+  return { canInstall: Boolean(promptEvent), installed, isIos, install }
 }
