@@ -131,7 +131,7 @@ export function DashboardPage() {
       <PageHeader
         title={`أهلاً، ${shopName}`}
         description={formatLongDate(new Date(), { digits: settings?.display?.digits })}
-        actions={<Badge tone="sand">المرحلة الثانية</Badge>}
+        actions={<Badge tone="sand">المرحلة الثالثة</Badge>}
       />
 
       <QuickActions />

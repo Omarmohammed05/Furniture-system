@@ -1,8 +1,11 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import {
+  Banknote,
   Boxes,
   CalendarClock,
+  Coins,
   Database,
+  FileText,
   HandCoins,
   HardDriveDownload,
   HardHat,
@@ -11,6 +14,7 @@ import {
   Lock,
   Package,
   PlusCircle,
+  Receipt,
   ReceiptText,
   Settings,
   ShoppingCart,
@@ -33,6 +37,13 @@ const MAIN_NAV = [
   { to: '/installments', label: 'الأقساط', icon: CalendarClock },
   { to: '/payments', label: 'الدفعات', icon: Wallet },
   { to: '/debts', label: 'الديون', icon: HandCoins },
+]
+
+const MONEY_NAV = [
+  { to: '/expenses', label: 'المصروفات', icon: Receipt },
+  { to: '/payroll', label: 'الرواتب', icon: Banknote },
+  { to: '/advances', label: 'السلف', icon: Coins },
+  { to: '/statements', label: 'كشوف الحساب', icon: FileText },
 ]
 
 const DATA_LINKS = [
@@ -115,6 +126,11 @@ export function AppShell() {
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 pb-3" aria-label="التنقل الرئيسي">
           {MAIN_NAV.map((item) => (
+            <SidebarLink key={item.to} item={item} />
+          ))}
+
+          <div className="px-3 pt-5 pb-2 text-[11px] font-bold tracking-wide text-muted">العاملون والحسابات</div>
+          {MONEY_NAV.map((item) => (
             <SidebarLink key={item.to} item={item} />
           ))}
 

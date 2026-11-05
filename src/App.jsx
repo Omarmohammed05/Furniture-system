@@ -5,10 +5,12 @@ import { AuthProvider, useAuth } from './app/AuthContext'
 import { AppShell } from './components/AppShell'
 import { BrandMark } from './components/BrandMark'
 import { UpdateBanner } from './components/UpdateBanner'
+import { AdvancesPage } from './pages/AdvancesPage'
 import { BackupPage } from './pages/BackupPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { DataHubPage } from './pages/DataHubPage'
 import { DebtsPage } from './pages/DebtsPage'
+import { ExpensesPage } from './pages/ExpensesPage'
 import { InstallmentsPage } from './pages/InstallmentsPage'
 import { InventoryPage } from './pages/InventoryPage'
 import { InvoiceFormPage } from './pages/InvoiceFormPage'
@@ -20,8 +22,11 @@ import { LockPage } from './pages/LockPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PartiesPage } from './pages/PartiesPage'
 import { PaymentsPage } from './pages/PaymentsPage'
+import { PayrollPage } from './pages/PayrollPage'
+import { PaySlipPage } from './pages/PaySlipPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SetupPage } from './pages/SetupPage'
+import { StatementPage } from './pages/StatementPage'
 import { WorkersPage } from './pages/WorkersPage'
 
 function SplashScreen() {
@@ -67,6 +72,12 @@ export default function App() {
                   <Route path="installments" element={<InstallmentsPage />} />
                   <Route path="payments" element={<PaymentsPage />} />
                   <Route path="debts" element={<DebtsPage />} />
+
+                  <Route path="expenses" element={<ExpensesPage />} />
+                  <Route path="payroll" element={<PayrollPage />} />
+                  <Route path="payroll/:id" element={<PaySlipPage />} />
+                  <Route path="advances" element={<AdvancesPage />} />
+                  <Route path="statements" element={<StatementPage />} />
 
                   <Route path="data" element={<DataHubPage />} />
                   <Route path="customers" element={<PartiesPage kind="customers" />} />

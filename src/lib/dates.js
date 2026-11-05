@@ -98,3 +98,25 @@ export function daysUntil(isoDate) {
   if (Number.isNaN(target)) return null
   return Math.round((target - Date.now()) / 86400000)
 }
+
+/** Month key of a date: YYYY-MM (payroll and expense periods). */
+export function currentMonth(date = new Date()) {
+  return todayIso(date).slice(0, 7)
+}
+
+const monthFormatter = new Intl.DateTimeFormat('ar-EG-u-nu-latn', { month: 'long', year: 'numeric' })
+
+export function formatMonth(month, { digits = 'western' } = {}) {
+  if (!/^\d{4}-\d{2}$/.test(String(month || ''))) return '—'
+  const date = new Date(`${month}-01T12:00:00`)
+  if (Number.isNaN(date.getTime())) return '—'
+  return localizeDigits(monthFormatter.format(date), digits)
+}
+
+/** First and last day of a YYYY-MM month. */
+export function monthRange(month) {
+  const [year, index] = String(month || '').split('-').map(Number)
+  if (!year || !index) return { from: '', to: '' }
+  const lastDay = new Date(year, index, 0).getDate()
+  return { from: `${month}-01`, to: `${month}-${String(lastDay).padStart(2, '0')}` }
+}

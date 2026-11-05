@@ -64,6 +64,37 @@ export function invoiceShareText({ kind, invoice, lines = [], partyName = '', sh
   return parts.filter(Boolean).join('\n')
 }
 
+/** Pay slip summary sent to the worker. */
+export function payslipShareText({ shopName, workerName, monthLabel, base, bonuses, deductions, advanceRepayment, net, currency = 'ج.م' }) {
+  return [
+    shopName,
+    `قسيمة راتب — ${monthLabel}`,
+    `العامل: ${workerName}`,
+    `المرتب الأساسي: ${money(base)} ${currency}`,
+    bonuses ? `مكافآت: ${money(bonuses)} ${currency}` : '',
+    deductions ? `خصومات: ${money(deductions)} ${currency}` : '',
+    advanceRepayment ? `خصم سلفة: ${money(advanceRepayment)} ${currency}` : '',
+    `الصافي: ${money(net)} ${currency}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
+/** Account statement summary (opening and closing balance only — the document has the detail). */
+export function statementShareText({ shopName, title, partyName, from, to, opening, closing, currency = 'ج.م' }) {
+  const period = from || to ? `من ${from ? formatShortDate(from) : 'البداية'} إلى ${to ? formatShortDate(to) : 'اليوم'}` : 'كل الحركات'
+  return [
+    shopName,
+    title,
+    `الحساب: ${partyName}`,
+    period,
+    `الرصيد الافتتاحي: ${money(opening)} ${currency}`,
+    `الرصيد الختامي: ${money(closing)} ${currency}`,
+  ]
+    .filter(Boolean)
+    .join('\n')
+}
+
 export function receiptShareText({ partyName, amount, date, invoiceNumber, shopName, currency = 'ج.م', direction = 'in' }) {
   const title = direction === 'in' ? 'سند تحصيل' : 'سند دفع'
   return [
