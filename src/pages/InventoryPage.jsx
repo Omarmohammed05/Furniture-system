@@ -4,6 +4,7 @@ import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
 import { formatQuantity } from '../lib/money'
 import { listStock } from '../services/inventory'
+import { listCategories } from '../services/masterData'
 import { ItemMovementsModal } from '../components/ItemMovementsModal'
 import { ProductionModal } from '../components/ProductionModal'
 import { StockAdjustmentModal } from '../components/StockAdjustmentModal'
@@ -11,7 +12,7 @@ import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
-import { Input } from '../components/ui/Field'
+import { Input, Select } from '../components/ui/Field'
 import { PageHeader } from '../components/ui/PageHeader'
 
 const FILTERS = [
@@ -24,11 +25,13 @@ export function InventoryPage() {
   const { digits } = useSettings()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [categoryId, setCategoryId] = useState('')
   const [movementsItem, setMovementsItem] = useState(null)
   const [adjustItem, setAdjustItem] = useState(null)
   const [productionOpen, setProductionOpen] = useState(false)
 
-  const rows = useLive(() => listStock({ search, filter }), [search, filter])
+  const rows = useLive(() => listStock({ search, filter, categoryId }), [search, filter, categoryId])
+  const categories = useLive(() => listCategories('item'), [])
 
   return (
     <div>
@@ -52,6 +55,19 @@ export function InventoryPage() {
           aria-label="بحث"
           className="flex-1"
         />
+        <Select
+          value={categoryId}
+          onChange={(event) => setCategoryId(event.target.value)}
+          className="sm:w-48"
+          aria-label="التصنيف"
+        >
+          <option value="">كل التصنيفات</option>
+          {(categories || []).map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </Select>
         <div className="flex gap-1.5">
           {FILTERS.map((option) => (
             <button
@@ -78,9 +94,9 @@ export function InventoryPage() {
         ) : rows.length === 0 ? (
           <EmptyState
             icon={Boxes}
-            title={search || filter !== 'all' ? 'لا توجد أصناف مطابقة' : 'لا توجد أصناف بعد'}
+            title={search || filter !== 'all' || categoryId ? 'لا توجد أصناف مطابقة' : 'لا توجد أصناف بعد'}
             description={
-              search || filter !== 'all'
+              search || filter !== 'all' || categoryId
                 ? 'جرّب بحثاً آخر أو أعد التصفية.'
                 : 'أضف أصنافك أولاً، ثم سجّل مشترياتك ليبدأ المخزون في الحساب.'
             }
@@ -89,19 +105,24 @@ export function InventoryPage() {
           <ul className="divide-y divide-line">
             {rows.map((item) => (
               <li key={item.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-[14.5px] font-semibold text-ink">{item.name}</p>
-                    {item.isOut ? (
-                      <Badge tone="danger">نافد</Badge>
-                    ) : item.isLow ? (
-                      <Badge tone="warn">تحت الحد</Badge>
-                    ) : null}
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  {item.imageData && (
+                    <img src={item.imageData} alt="" className="h-11 w-11 shrink-0 rounded-lg border border-line object-cover" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-[14.5px] font-semibold text-ink">{item.name}</p>
+                      {item.isOut ? (
+                        <Badge tone="danger">نافد</Badge>
+                      ) : item.isLow ? (
+                        <Badge tone="warn">تحت الحد</Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-0.5 truncate text-[12.5px] text-muted">
+                      {item.code ? `${item.code} • ` : ''}
+                      حد التنبيه {formatQuantity(item.lowLimit, { digits })}
+                    </p>
                   </div>
-                  <p className="mt-0.5 truncate text-[12.5px] text-muted">
-                    {item.code ? `${item.code} • ` : ''}
-                    حد التنبيه {formatQuantity(item.lowLimit, { digits })}
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 sm:justify-end">

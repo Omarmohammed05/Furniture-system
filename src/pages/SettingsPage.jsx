@@ -20,7 +20,7 @@ import { useSettings } from '../app/SettingsContext'
 import { useToast } from '../app/ToastContext'
 import { setPin, verifyPin } from '../services/settings'
 import { backupStatus } from '../services/backup'
-import { getStorageEstimate, isStoragePersisted, requestPersistentStorage } from '../services/storage'
+import { getStorageEstimate, isStorageLow, isStoragePersisted, requestPersistentStorage } from '../services/storage'
 import { APP_VERSION } from '../lib/appInfo'
 import { SCHEMA_VERSION } from '../data/db'
 import { DIGIT_STYLES, localizeDigits } from '../lib/digits'
@@ -735,8 +735,18 @@ function StorageSection() {
               <span>المتاح: {formatBytes(estimate.quota)}</span>
             </div>
             <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-canvas">
-              <div className="h-full rounded-full bg-ink" style={{ width: `${Math.max(2, estimate.percent)}%` }} />
+              <div
+                className={`h-full rounded-full ${isStorageLow(estimate) ? 'bg-danger' : 'bg-ink'}`}
+                style={{ width: `${Math.max(2, estimate.percent)}%` }}
+              />
             </div>
+          </div>
+        )}
+
+        {isStorageLow(estimate) && (
+          <div className="rounded-xl border border-danger/25 bg-danger-soft px-3 py-2.5 text-[12.5px] font-semibold text-[#912018]">
+            المساحة تقترب من الامتلاء ({Math.round(estimate.percent)}%). صدّر نسخة احتياطية الآن من صفحة النسخ
+            الاحتياطي قبل أن يرفض المتصفح حفظ بيانات جديدة.
           </div>
         )}
 

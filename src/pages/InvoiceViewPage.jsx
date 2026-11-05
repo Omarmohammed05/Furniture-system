@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowRight, Ban, MessageCircle, Pencil, Printer, Wallet } from 'lucide-react'
+import { ArrowRight, Ban, Copy, MessageCircle, Pencil, Printer, Wallet } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
 import { useToast } from '../app/ToastContext'
 import { useLive } from '../hooks/useLive'
@@ -13,6 +13,7 @@ import { getParty } from '../services/parties'
 import { methodLabel } from '../services/payments'
 import { getPurchaseInvoice, voidPurchaseInvoice } from '../services/purchases'
 import { getSalesInvoice, voidSalesInvoice } from '../services/sales'
+import { DocumentExportButtons } from '../components/DocumentExportButtons'
 import { InvoiceStatusBadge } from '../components/InvoiceStatusBadge'
 import { PaymentModal } from '../components/PaymentModal'
 import { VoidInvoiceModal } from '../components/VoidInvoiceModal'
@@ -34,6 +35,7 @@ export function InvoiceViewPage({ kind }) {
 
   const [voidOpen, setVoidOpen] = useState(false)
   const [payOpen, setPayOpen] = useState(false)
+  const docRef = useRef(null)
 
   const data = useLive(() => (isSale ? getSalesInvoice(id) : getPurchaseInvoice(id)), [id, isSale])
   const partyKind = isSale ? 'customers' : 'suppliers'
@@ -116,11 +118,20 @@ export function InvoiceViewPage({ kind }) {
                 <MessageCircle size={16} />
                 واتساب
               </Button>
+              <DocumentExportButtons getNode={() => docRef.current} name={`${invoice.number || 'invoice'}`} />
               {!invoice.voidedAt && (
                 <Link to={`${base}/${id}/edit`}>
                   <Button variant="secondary">
                     <Pencil size={16} />
                     تعديل
+                  </Button>
+                </Link>
+              )}
+              {!invoice.voidedAt && (
+                <Link to={`${base}/new?from=${id}`}>
+                  <Button variant="secondary">
+                    <Copy size={16} />
+                    تكرار
                   </Button>
                 </Link>
               )}
@@ -144,10 +155,18 @@ export function InvoiceViewPage({ kind }) {
       {invoice.voidedAt && (
         <div className="no-print mb-4 rounded-2xl border border-danger/25 bg-danger-soft px-4 py-3 text-[13.5px] font-semibold text-[#912018]">
           هذه الفاتورة ملغاة — {invoice.voidReason}
+          {invoice.paid > 0 && (
+            <p className="mt-1 font-semibold">
+              تنبيه: المدفوع على هذه الفاتورة {money(invoice.paid)} —{' '}
+              {isSale ? 'يجب ردّه للعميل أو تسويته كرصيد دائن.' : 'يجب استرداده من المورد أو تسويته كرصيد مدين.'}
+            </p>
+          )}
         </div>
       )}
 
-      <InvoiceDocument kind={kind} invoice={invoice} lines={lines} party={party} />
+      <div ref={docRef} className="bg-white">
+        <InvoiceDocument kind={kind} invoice={invoice} lines={lines} party={party} />
+      </div>
 
       <div className="no-print mt-4 grid gap-4 lg:grid-cols-2">
         <Card>

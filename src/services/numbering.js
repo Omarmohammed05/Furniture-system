@@ -14,10 +14,14 @@ export function previewInvoiceNumber({ prefix = 'SAL', deviceCode = 'A', sequenc
   return formatInvoiceNumber({ prefix, deviceCode, sequence })
 }
 
-export async function nextNumber(type) {
-  const settings = await getSettings()
-  const deviceCode = settings.numbering.deviceCode || 'A'
-  const prefix = settings.numbering.prefixes?.[type] || String(type).toUpperCase()
+/**
+ * `settings` is passed by the invoice services so the counter can be consumed
+ * inside their own transaction without reading the settings table again.
+ */
+export async function nextNumber(type, { settings = null } = {}) {
+  const config = settings || (await getSettings())
+  const deviceCode = config.numbering.deviceCode || 'A'
+  const prefix = config.numbering.prefixes?.[type] || String(type).toUpperCase()
   const key = `${type}:${deviceCode}`
 
   return repo.transaction('rw', ['counters', 'activity_log'], async () => {

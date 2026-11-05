@@ -23,6 +23,7 @@ import { PageHeader } from '../components/ui/PageHeader'
 const FILTERS = [
   { value: 'open', label: 'غير مسددة' },
   { value: 'overdue', label: 'متأخرة' },
+  { value: 'week', label: 'خلال الأسبوع' },
   { value: 'paid', label: 'مسددة' },
   { value: 'all', label: 'الكل' },
 ]

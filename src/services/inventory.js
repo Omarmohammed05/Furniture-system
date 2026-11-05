@@ -82,8 +82,8 @@ function lowStockLimit(item, settings) {
   return Number(settings?.stock?.lowStockThreshold) || 0
 }
 
-/** Stock list with search and the low / out-of-stock filters. */
-export async function listStock({ search = '', filter = 'all' } = {}) {
+/** Stock list with search, category filter and the low / out-of-stock filters. */
+export async function listStock({ search = '', filter = 'all', categoryId = '' } = {}) {
   const [items, stock, settings] = await Promise.all([repo.all('items'), getStockMap(), getSettings()])
   const term = String(search).trim().toLowerCase()
 
@@ -94,6 +94,7 @@ export async function listStock({ search = '', filter = 'all' } = {}) {
       const limit = lowStockLimit(item, settings)
       return { ...item, stock: onHand, lowLimit: limit, isLow: onHand <= limit, isOut: onHand <= 0 }
     })
+    .filter((row) => (categoryId ? row.categoryId === categoryId : true))
     .filter((row) => (filter === 'low' ? row.isLow : filter === 'out' ? row.isOut : true))
     .filter((row) => {
       if (!term) return true
@@ -109,15 +110,22 @@ export async function listLowStock() {
   return listStock({ filter: 'low' })
 }
 
-/** Newest first, each row carrying its running balance. */
-export async function getItemMovements(itemId) {
+/**
+ * Newest first, each row carrying its running balance. The running balance
+ * always starts from the whole history, so a ranged view still shows the
+ * balance the item really had on each date.
+ */
+export async function getItemMovements(itemId, { from = '', to = '' } = {}) {
   const rows = (await repo.all('stock_movements')).filter((row) => row.itemId === itemId).sort(sortMovements)
   let balance = 0
   const withBalance = rows.map((row) => {
     balance = roundQty(balance + (Number(row.qty) || 0))
     return { ...row, balance }
   })
-  return withBalance.reverse()
+  return withBalance
+    .filter((row) => (from ? String(row.date) >= from : true))
+    .filter((row) => (to ? String(row.date) <= to : true))
+    .reverse()
 }
 
 /**
@@ -139,11 +147,11 @@ export async function checkStock(lines = [], { excludeRef = null } = {}) {
 }
 
 /** Applies the negative-stock policy and throws when the movement must stop. */
-export async function ensureStock(lines = [], { excludeRef = null, allowNegative = false } = {}) {
+export async function ensureStock(lines = [], { excludeRef = null, allowNegative = false, settings = null } = {}) {
   const shortages = await checkStock(lines, { excludeRef })
   if (!shortages.length) return { ok: true, shortages }
-  const settings = await getSettings()
-  const policy = settings?.stock?.negativePolicy || 'warn'
+  const config = settings || (await getSettings())
+  const policy = config?.stock?.negativePolicy || 'warn'
   if (policy === 'allow') return { ok: true, shortages }
   if (policy === 'warn' && allowNegative) return { ok: true, shortages }
   throw new StockError(shortages, policy)

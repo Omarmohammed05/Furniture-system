@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Archive, Pencil, Plus, Package, RotateCcw } from 'lucide-react'
+import { Archive, Download, ImagePlus, Pencil, Plus, Package, RotateCcw, Upload, X } from 'lucide-react'
 import { useToast } from '../app/ToastContext'
 import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
 import { archiveItem, createItem, ITEM_TYPES, itemTypeLabel, listItems, restoreItem, updateItem, validateItem } from '../services/items'
 import { listCategories, listUnits } from '../services/masterData'
 import { ValidationError } from '../lib/errors'
+import { exportRowsToExcel } from '../lib/excel'
+import { prepareLogo } from '../lib/files'
 import { minorToInput } from '../lib/money'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -27,6 +29,7 @@ const EMPTY_FORM = {
   salePrice: '',
   minStock: '',
   notes: '',
+  imageData: '',
 }
 
 function ItemFormModal({ open, onClose, item, categories, units }) {
@@ -50,6 +53,7 @@ function ItemFormModal({ open, onClose, item, categories, units }) {
             salePrice: minorToInput(item.salePrice),
             minStock: item.minStock ? String(item.minStock) : '',
             notes: item.notes || '',
+            imageData: item.imageData || '',
           }
         : EMPTY_FORM,
     )
@@ -58,6 +62,18 @@ function ItemFormModal({ open, onClose, item, categories, units }) {
   const setField = (key, value) => {
     setValues((current) => ({ ...current, [key]: value }))
     setErrors((current) => ({ ...current, [key]: undefined }))
+  }
+
+  // The picture is shrunk to 640px and kept inside IndexedDB with the item.
+  const handleImage = async (event) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    try {
+      setField('imageData', await prepareLogo(file, 640))
+    } catch (error) {
+      toast.error(error.message || 'تعذر تحميل الصورة')
+    }
   }
 
   const handleSubmit = async (event) => {
@@ -204,6 +220,31 @@ function ItemFormModal({ open, onClose, item, categories, units }) {
           </Field>
         </div>
 
+        <Field label="صورة الصنف" hint="اختياري — تُصغَّر وتُحفظ على الجهاز">
+          <div className="flex items-center gap-3">
+            {values.imageData ? (
+              <img src={values.imageData} alt="" className="h-16 w-16 rounded-xl border border-line object-cover" />
+            ) : (
+              <span className="flex h-16 w-16 items-center justify-center rounded-xl border border-dashed border-line text-muted">
+                <ImagePlus size={20} aria-hidden="true" />
+              </span>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <label className="inline-flex h-9 cursor-pointer items-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm font-semibold text-ink">
+                <Upload size={15} />
+                اختيار صورة
+                <input type="file" accept="image/*" className="sr-only" onChange={handleImage} />
+              </label>
+              {values.imageData && (
+                <Button variant="ghost" size="sm" onClick={() => setField('imageData', '')}>
+                  <X size={15} />
+                  إزالة
+                </Button>
+              )}
+            </div>
+          </div>
+        </Field>
+
         <Field label="ملاحظات" htmlFor="item-notes">
           <Textarea
             id="item-notes"
@@ -259,16 +300,50 @@ export function ItemsPage() {
     }
   }
 
+  const exportExcel = () => {
+    exportRowsToExcel({
+      filename: 'items',
+      sheetName: 'الأصناف',
+      title: 'الأصناف',
+      columns: [
+        { key: 'name', label: 'الصنف', type: 'text' },
+        { key: 'type', label: 'النوع', type: 'text' },
+        { key: 'code', label: 'الكود', type: 'text' },
+        { key: 'category', label: 'التصنيف', type: 'text' },
+        { key: 'unit', label: 'الوحدة', type: 'text' },
+        { key: 'purchasePrice', label: 'سعر الشراء', type: 'money' },
+        { key: 'salePrice', label: 'سعر البيع', type: 'money' },
+        { key: 'minStock', label: 'حد التنبيه', type: 'qty' },
+      ],
+      rows: (items || []).map((item) => ({
+        name: item.name,
+        type: itemTypeLabel(item.type),
+        code: item.code || '',
+        category: categoryName(item.categoryId) || '',
+        unit: unitName(item.unitId) || '',
+        purchasePrice: item.purchasePrice || 0,
+        salePrice: item.salePrice || 0,
+        minStock: item.minStock || 0,
+      })),
+    }).catch(() => toast.error('تعذر تصدير الملف'))
+  }
+
   return (
     <div>
       <PageHeader
         title="الأصناف"
         description="الخامات التي نشتريها والمنتجات التي نبيعها، بأسعارها ووحداتها."
         actions={
-          <Button variant="primary" onClick={openCreate}>
-            <Plus size={17} />
-            إضافة صنف
-          </Button>
+          <>
+            <Button variant="secondary" onClick={exportExcel} disabled={!items?.length}>
+              <Download size={16} />
+              Excel
+            </Button>
+            <Button variant="primary" onClick={openCreate}>
+              <Plus size={17} />
+              إضافة صنف
+            </Button>
+          </>
         }
       />
 
@@ -319,16 +394,25 @@ export function ItemsPage() {
                 key={item.id}
                 className={`flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center ${item.deletedAt ? 'opacity-70' : ''}`}
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-[14.5px] font-semibold text-ink">{item.name}</p>
-                    <Badge tone={item.type === 'product' ? 'ink' : 'sand'}>{itemTypeLabel(item.type)}</Badge>
-                    {item.deletedAt && <Badge tone="outline">مؤرشف</Badge>}
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  {item.imageData && (
+                    <img
+                      src={item.imageData}
+                      alt=""
+                      className="h-11 w-11 shrink-0 rounded-lg border border-line object-cover"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-[14.5px] font-semibold text-ink">{item.name}</p>
+                      <Badge tone={item.type === 'product' ? 'ink' : 'sand'}>{itemTypeLabel(item.type)}</Badge>
+                      {item.deletedAt && <Badge tone="outline">مؤرشف</Badge>}
+                    </div>
+                    <p className="mt-0.5 truncate text-[12.5px] text-muted">
+                      {[categoryName(item.categoryId), unitName(item.unitId), item.code].filter(Boolean).join(' • ') ||
+                        'بدون تصنيف أو وحدة'}
+                    </p>
                   </div>
-                  <p className="mt-0.5 truncate text-[12.5px] text-muted">
-                    {[categoryName(item.categoryId), unitName(item.unitId), item.code].filter(Boolean).join(' • ') ||
-                      'بدون تصنيف أو وحدة'}
-                  </p>
                 </div>
 
                 <div className="flex items-center justify-between gap-4 sm:justify-end">

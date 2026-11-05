@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Ban, Eye, Pencil, Plus, ReceiptText } from 'lucide-react'
+import { Ban, Download, Eye, Pencil, Plus, ReceiptText } from 'lucide-react'
 import { useToast } from '../app/ToastContext'
 import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
 import { formatShortDate } from '../lib/dates'
+import { exportRowsToExcel } from '../lib/excel'
 import { remainingOf } from '../lib/invoiceStatus'
 import { listParties } from '../services/parties'
 import { listPurchaseInvoices, voidPurchaseInvoice } from '../services/purchases'
@@ -77,6 +78,34 @@ export function InvoicesPage({ kind }) {
     setPage(1)
   }, [kind, search, status, partyId])
 
+  const exportExcel = () => {
+    const statusLabel = { unpaid: 'غير مدفوعة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة', void: 'ملغاة' }
+    exportRowsToExcel({
+      filename: kind,
+      sheetName: config.title,
+      title: config.title,
+      summary: [{ label: 'إجمالي المعروض', value: total, type: 'money' }],
+      columns: [
+        { key: 'number', label: 'الرقم', type: 'text' },
+        { key: 'date', label: 'التاريخ', type: 'text' },
+        { key: 'party', label: config.partyLabel, type: 'text' },
+        { key: 'total', label: 'الإجمالي', type: 'money' },
+        { key: 'paid', label: 'المدفوع', type: 'money' },
+        { key: 'remaining', label: 'المتبقي', type: 'money' },
+        { key: 'status', label: 'الحالة', type: 'text' },
+      ],
+      rows: all.map((invoice) => ({
+        number: invoice.number,
+        date: invoice.date,
+        party: invoice[kind === 'sale' ? 'customerName' : 'supplierName'] || '',
+        total: invoice.total,
+        paid: invoice.paid,
+        remaining: invoice.voidedAt ? 0 : remainingOf(invoice),
+        status: invoice.voidedAt ? 'ملغاة' : statusLabel[invoice.status] || invoice.status,
+      })),
+    }).catch(() => toast.error('تعذر تصدير الملف'))
+  }
+
   const handleVoid = async (reason) => {
     try {
       await config.voidInvoice(voidTarget.id, reason)
@@ -93,12 +122,18 @@ export function InvoicesPage({ kind }) {
         title={config.title}
         description={config.description}
         actions={
-          <Link to={config.newTo}>
-            <Button variant="primary">
-              <Plus size={17} />
-              {config.newLabel}
+          <>
+            <Button variant="secondary" onClick={exportExcel} disabled={!all.length}>
+              <Download size={16} />
+              Excel
             </Button>
-          </Link>
+            <Link to={config.newTo}>
+              <Button variant="primary">
+                <Plus size={17} />
+                {config.newLabel}
+              </Button>
+            </Link>
+          </>
         }
       />
 

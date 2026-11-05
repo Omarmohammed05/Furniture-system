@@ -82,6 +82,40 @@ export async function exportBackup({ automatic = false } = {}) {
   return { filename, exportedAt, checksum, counts, total: totalOf(counts), payload }
 }
 
+/**
+ * The integrity pass the restore flow promises (implementation §5): every
+ * child row must point at a parent document that is present in the same file,
+ * and no invoice line may carry a negative quantity.
+ */
+function checkIntegrity(tables) {
+  const parentIds = (name) => new Set((tables[name] || []).map((row) => row.id))
+  const relations = [
+    { rows: 'sales_lines', field: 'invoiceId', parent: 'sales_invoices', label: 'بنود فواتير البيع' },
+    { rows: 'purchase_lines', field: 'invoiceId', parent: 'purchase_invoices', label: 'بنود فواتير الشراء' },
+    { rows: 'installments', field: 'salesInvoiceId', parent: 'sales_invoices', label: 'الأقساط' },
+    { rows: 'production_materials', field: 'entryId', parent: 'production_entries', label: 'خامات الإنتاج' },
+  ]
+
+  for (const relation of relations) {
+    const parents = parentIds(relation.parent)
+    const orphan = (tables[relation.rows] || []).find(
+      (row) => row[relation.field] && !parents.has(row[relation.field]),
+    )
+    if (orphan) {
+      return { ok: false, error: `الملف غير متسق — ${relation.label} بدون مستندها الأصلي` }
+    }
+  }
+
+  const negativeLine = [...(tables.sales_lines || []), ...(tables.purchase_lines || [])].find(
+    (row) => (Number(row.qty) || 0) < 0,
+  )
+  if (negativeLine) {
+    return { ok: false, error: 'الملف غير متسق — بند فاتورة بكمية سالبة' }
+  }
+
+  return { ok: true }
+}
+
 export async function validateBackupPayload(payload) {
   if (!payload || typeof payload !== 'object') {
     return { ok: false, error: 'الملف ليس نسخة احتياطية صالحة' }
@@ -114,6 +148,9 @@ export async function validateBackupPayload(payload) {
       return { ok: false, error: 'الملف تالف أو تم تعديله — فحص السلامة لم ينجح' }
     }
   }
+
+  const integrity = checkIntegrity(payload.tables)
+  if (!integrity.ok) return { ok: false, error: integrity.error }
 
   const counts = countTables(payload.tables)
   const total = totalOf(counts)

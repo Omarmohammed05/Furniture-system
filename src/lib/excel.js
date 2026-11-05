@@ -29,6 +29,20 @@ async function loadXlsx() {
   return module.default || module
 }
 
+/**
+ * Exports any list screen (invoices, items, payments, parties, statement rows)
+ * through the same workbook pipeline as the reports.
+ */
+export function exportRowsToExcel({ filename = 'export', sheetName = 'بيانات', title = '', columns = [], rows = [], summary = [], note = '' }) {
+  return exportReportToExcel({
+    title: title || sheetName,
+    filename,
+    summary,
+    note,
+    sections: [{ title: sheetName, columns, rows }],
+  })
+}
+
 /** Builds one worksheet per report section, plus a summary sheet. */
 export async function exportReportToExcel(report, { from = '', to = '' } = {}) {
   const XLSX = await loadXlsx()

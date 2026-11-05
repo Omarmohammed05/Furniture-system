@@ -22,6 +22,13 @@ export async function requestPersistentStorage() {
   }
 }
 
+/** Above this share of the quota the owner is warned to back up and clean up. */
+export const STORAGE_WARN_PERCENT = 85
+
+export function isStorageLow(estimate) {
+  return Boolean(estimate && estimate.quota > 0 && estimate.percent >= STORAGE_WARN_PERCENT)
+}
+
 export async function getStorageEstimate() {
   if (!navigator.storage?.estimate) return null
   try {

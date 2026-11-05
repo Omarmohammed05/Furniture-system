@@ -1,12 +1,15 @@
-import { useEffect, useState } from 'react'
-import { FileText, MessageCircle, Printer } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Download, FileText, MessageCircle, Printer } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
+import { useToast } from '../app/ToastContext'
 import { useLive } from '../hooks/useLive'
 import { StatementDocument } from '../documents/StatementDocument'
 import { formatShortDate } from '../lib/dates'
+import { exportRowsToExcel } from '../lib/excel'
 import { openWhatsApp, statementShareText } from '../lib/whatsapp'
 import { listParties } from '../services/parties'
 import { getStatement } from '../services/statements'
+import { DocumentExportButtons } from '../components/DocumentExportButtons'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
@@ -15,11 +18,13 @@ import { PageHeader } from '../components/ui/PageHeader'
 
 export function StatementPage() {
   const { settings, digits } = useSettings()
+  const toast = useToast()
 
   const [kind, setKind] = useState('customers')
   const [partyId, setPartyId] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
+  const docRef = useRef(null)
 
   const parties = useLive(() => listParties(kind), [kind])
   const statement = useLive(
@@ -48,6 +53,39 @@ export function StatementPage() {
     })
   }
 
+  const exportExcel = () => {
+    if (!statement) return
+    exportRowsToExcel({
+      filename: 'statement',
+      sheetName: 'كشف حساب',
+      title: statement.isCustomer ? 'كشف حساب عميل' : 'كشف حساب مورد',
+      summary: [
+        { label: 'الحساب', value: statement.party.name, type: 'text' },
+        { label: 'الرصيد الافتتاحي', value: statement.opening, type: 'money' },
+        { label: 'الرصيد الختامي', value: statement.closing, type: 'money' },
+      ],
+      columns: [
+        { key: 'date', label: 'التاريخ', type: 'text' },
+        { key: 'label', label: 'البيان', type: 'text' },
+        { key: 'number', label: 'المستند', type: 'text' },
+        { key: 'debit', label: 'مدين', type: 'money' },
+        { key: 'credit', label: 'دائن', type: 'money' },
+        { key: 'balance', label: 'الرصيد', type: 'money' },
+      ],
+      rows: [
+        { date: from || '', label: 'رصيد افتتاحي', number: '', debit: 0, credit: 0, balance: statement.opening },
+        ...statement.rows.map((row) => ({
+          date: row.date,
+          label: row.label,
+          number: row.number || '',
+          debit: row.debit,
+          credit: row.credit,
+          balance: row.balance,
+        })),
+      ],
+    }).catch(() => toast.error('تعذر تصدير الملف'))
+  }
+
   return (
     <div>
       <div className="no-print">
@@ -65,6 +103,11 @@ export function StatementPage() {
                   <MessageCircle size={16} />
                   واتساب
                 </Button>
+                <Button variant="secondary" onClick={exportExcel}>
+                  <Download size={16} />
+                  Excel
+                </Button>
+                <DocumentExportButtons getNode={() => docRef.current} name="statement" />
               </>
             )
           }
@@ -106,7 +149,9 @@ export function StatementPage() {
         </Card>
       ) : (
         <>
-          <StatementDocument statement={statement} />
+          <div ref={docRef} className="bg-white">
+            <StatementDocument statement={statement} />
+          </div>
           <p className="no-print mt-3 px-1 text-[12px] leading-6 text-muted">
             الفترة: {from ? formatShortDate(from, { digits }) : 'البداية'} —{' '}
             {to ? formatShortDate(to, { digits }) : 'اليوم'} • {statement.totals.movements} حركة

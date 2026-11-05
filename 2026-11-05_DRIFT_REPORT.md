@@ -74,6 +74,27 @@ Only divergences are listed. A statement is reported only where the code was rea
 - "App installs and opens with airplane mode on": not verifiable in this environment; dev preview has no service worker.
 - The remaining checklist items (stock in/out/void, installments and balances, statements, payroll rules, VAT toggle, backup/restore, number uniqueness) are implemented in code but were not exercised end to end in this pass.
 
+## Resolution log — 2026-11-05 (follow-up pass)
+
+Fixed in code:
+
+- M2 item images: `items.imageData` added to the item service and the item form (shrunk to 640px, stored on the device), shown as a thumbnail in the items and stock lists.
+- M3 stock category filter (`listStock({ categoryId })` + filter on the inventory screen) and `getItemMovements(itemId, { from, to })` with date inputs in the movements modal.
+- M4/M5 duplicate: «تكرار» on the invoice view opens `/<kind>/new?from=<id>` prefilled (party, lines, discount, notes), unpaid and dated today.
+- M6 receipt sharing (`receiptShareText` now used from the payments list), «خلال الأسبوع» installment filter, and `getAging(type)` feeding 0–30 / 31–60 / 60+ buckets into the debts screen and each party row.
+- M9 statement Excel export, M12 list Excel export (invoices, items, payments), and a low-storage warning (≥85% of quota) in the storage settings card.
+- M13 image/PDF export of invoices and statements via `html-to-image` + `jspdf` (`src/lib/exportDocument.js`), rasterising the real document so Arabic shaping is preserved.
+- M14 activity log screen at `/activity` (also linked from the data hub and the system nav).
+- §1 rule 3: invoice number allocation and the stock check now run inside the invoice transaction (`nextNumber(type, { settings })` inside the `rw` scope).
+- §5: voiding a part-paid invoice now warns that the paid amount must be refunded; restore validates orphan lines and negative line quantities before replacing data.
+- §2: `html-to-image` and `jspdf` are now installed, so the PNG → PDF pipeline exists.
+
+Still open (unchanged):
+
+- Whole-table reads remain in balances, statements, aging, stock totals and invoice detail; only invoice lists are paginated, so the 5,000-invoice acceptance item is unproven.
+- The service worker is still registered for production builds only (`UpdateBanner`), so airplane-mode install cannot be exercised in the dev preview.
+- `markInstallmentPaid(id, paymentId)` remains implemented as `payInstallment(id, { method, date })`; `getItemMovements` and `getAging` now match the catalog.
+
 **Verification coverage of this review**
 - Static: every bullet above is backed by the named file.
 - Runtime: the app was driven through first-run setup and the dashboard at 1055 px and 375 px; no console error, no failed request, no horizontal overflow. The offline install, document export and large-data behaviour could not be checked because they do not exist or need a production build with seeded data.

@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Download, MessageCircle, Wallet } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
+import { useToast } from '../app/ToastContext'
 import { useLive } from '../hooks/useLive'
 import { formatShortDate } from '../lib/dates'
+import { exportRowsToExcel } from '../lib/excel'
+import { openWhatsApp, receiptShareText } from '../lib/whatsapp'
+import { getParty } from '../services/parties'
 import { listPayments, methodLabel } from '../services/payments'
 import { PaymentModal } from '../components/PaymentModal'
 import { Badge } from '../components/ui/Badge'
@@ -14,7 +18,8 @@ import { Input, Select } from '../components/ui/Field'
 import { PageHeader } from '../components/ui/PageHeader'
 
 export function PaymentsPage() {
-  const { money, digits } = useSettings()
+  const { settings, money, digits } = useSettings()
+  const toast = useToast()
   const [direction, setDirection] = useState('all')
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
@@ -42,6 +47,50 @@ export function PaymentsPage() {
     { in: 0, out: 0 },
   )
 
+  const shareReceipt = async (row) => {
+    try {
+      const party = row.partyId ? await getParty(row.partyType, row.partyId) : null
+      openWhatsApp({
+        phone: party?.phone || '',
+        text: receiptShareText({
+          partyName: row.partyName || '',
+          amount: row.amount,
+          date: row.date,
+          invoiceNumber: row.invoiceNumber,
+          shopName: settings?.profile?.shopName || '',
+          currency: settings?.currency?.label || 'ج.م',
+          direction: row.direction,
+        }),
+      })
+    } catch (error) {
+      toast.error(error.message || 'تعذرت المشاركة')
+    }
+  }
+
+  const exportExcel = () => {
+    exportRowsToExcel({
+      filename: 'payments',
+      sheetName: 'الدفعات',
+      title: 'الدفعات',
+      columns: [
+        { key: 'date', label: 'التاريخ', type: 'text' },
+        { key: 'partyName', label: 'الحساب', type: 'text' },
+        { key: 'kind', label: 'النوع', type: 'text' },
+        { key: 'method', label: 'طريقة الدفع', type: 'text' },
+        { key: 'invoiceNumber', label: 'الفاتورة', type: 'text' },
+        { key: 'amount', label: 'المبلغ', type: 'money' },
+      ],
+      rows: visible.map((row) => ({
+        date: row.date,
+        partyName: row.partyName || '',
+        kind: row.direction === 'in' ? 'تحصيل' : 'دفعة',
+        method: methodLabel(row.method),
+        invoiceNumber: row.invoiceNumber || '',
+        amount: row.amount,
+      })),
+    }).catch(() => toast.error('تعذر تصدير الملف'))
+  }
+
   return (
     <div>
       <PageHeader
@@ -49,6 +98,10 @@ export function PaymentsPage() {
         description="كل مبلغ دخل أو خرج، على فاتورة أو على الحساب."
         actions={
           <>
+            <Button variant="secondary" onClick={exportExcel} disabled={!visible.length}>
+              <Download size={16} />
+              Excel
+            </Button>
             <Button variant="secondary" onClick={() => setModal('out')}>
               <ArrowUpRight size={16} />
               سند دفع
@@ -117,9 +170,19 @@ export function PaymentsPage() {
                     {row.invoiceNumber ? ` • ${row.invoiceNumber}` : ' • على الحساب'}
                   </p>
                 </div>
-                <p className={`tabular text-[14.5px] font-bold ${row.direction === 'in' ? 'text-success' : 'text-danger'}`}>
-                  {row.direction === 'in' ? '+' : '−'} {money(row.amount)}
-                </p>
+                <div className="flex items-center gap-1.5">
+                  <p className={`tabular text-[14.5px] font-bold ${row.direction === 'in' ? 'text-success' : 'text-danger'}`}>
+                    {row.direction === 'in' ? '+' : '−'} {money(row.amount)}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => shareReceipt(row)}
+                    aria-label={`مشاركة سند ${row.partyName || ''}`}
+                  >
+                    <MessageCircle size={16} />
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

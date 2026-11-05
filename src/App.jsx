@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './app/AuthContext'
 import { AppShell } from './components/AppShell'
 import { BrandMark } from './components/BrandMark'
 import { UpdateBanner } from './components/UpdateBanner'
+import { ActivityPage } from './pages/ActivityPage'
 import { AdvancesPage } from './pages/AdvancesPage'
 import { BackupPage } from './pages/BackupPage'
 import { DashboardPage } from './pages/DashboardPage'
@@ -82,6 +83,7 @@ export default function App() {
                   <Route path="reports" element={<ReportsPage />} />
 
                   <Route path="data" element={<DataHubPage />} />
+                  <Route path="activity" element={<ActivityPage />} />
                   <Route path="customers" element={<PartiesPage kind="customers" />} />
                   <Route path="suppliers" element={<PartiesPage kind="suppliers" />} />
                   <Route path="items" element={<ItemsPage />} />

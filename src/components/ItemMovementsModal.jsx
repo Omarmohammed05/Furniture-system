@@ -3,27 +3,40 @@ import { useSettings } from '../app/SettingsContext'
 import { formatShortDate } from '../lib/dates'
 import { formatQuantity } from '../lib/money'
 import { getItemMovements, movementLabel } from '../services/inventory'
+import { Input } from './ui/Field'
 import { Modal } from './ui/Modal'
 
 /** Movement history with a running balance, newest first (M3). */
 export function ItemMovementsModal({ open, onClose, item }) {
   const { digits } = useSettings()
   const [rows, setRows] = useState(null)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+
+  useEffect(() => {
+    if (!open) return
+    setFrom('')
+    setTo('')
+  }, [open])
 
   useEffect(() => {
     if (!open || !item) return
     let alive = true
     setRows(null)
-    getItemMovements(item.id).then((data) => {
+    getItemMovements(item.id, { from, to }).then((data) => {
       if (alive) setRows(data)
     })
     return () => {
       alive = false
     }
-  }, [open, item])
+  }, [open, item, from, to])
 
   return (
     <Modal open={open} onClose={onClose} title="حركات المخزون" description={item?.name} size="lg">
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} aria-label="من تاريخ" />
+        <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} aria-label="إلى تاريخ" />
+      </div>
       {rows === null ? (
         <div className="space-y-2">
           {[0, 1, 2].map((row) => (

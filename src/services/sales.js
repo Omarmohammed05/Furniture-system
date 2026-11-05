@@ -92,12 +92,10 @@ export async function createSalesInvoice(input) {
   const settings = await getSettings()
   const built = await buildSale(input, settings)
   assertValid(built.errors)
-  await ensureStock(built.lines, { allowNegative: Boolean(input.allowNegative) })
 
-  const number = await nextNumber('sale')
   const deviceId = settings.app.deviceId || 'A'
   const invoice = newRecord(deviceId, {
-    number,
+    number: '',
     customerId: built.customer.id,
     customerName: built.customer.name,
     date: built.date,
@@ -125,8 +123,13 @@ export async function createSalesInvoice(input) {
 
   await repo.transaction(
     'rw',
-    ['sales_invoices', 'sales_lines', 'stock_movements', 'payments', 'installments', 'activity_log'],
+    ['sales_invoices', 'sales_lines', 'stock_movements', 'payments', 'installments', 'activity_log', 'counters'],
     async () => {
+      // Number allocation and the stock check live inside the same transaction
+      // as the writes, so a failed invoice consumes neither a number nor stock.
+      const number = await nextNumber('sale', { settings })
+      await ensureStock(built.lines, { allowNegative: Boolean(input.allowNegative), settings })
+      invoice.number = number
       await repo.put('sales_invoices', invoice)
       await repo.bulkPut(
         'sales_lines',
@@ -212,9 +215,6 @@ export async function updateSalesInvoice(id, input) {
   const built = await buildSale(input, settings)
   assertValid(built.errors)
 
-  const excludeRef = { refType: 'sale', refId: id }
-  await ensureStock(built.lines, { allowNegative: Boolean(input.allowNegative), excludeRef })
-
   const payments = (await repo.all('payments')).filter(
     (row) => row.invoiceType === 'sale' && row.invoiceId === id,
   )
@@ -256,6 +256,11 @@ export async function updateSalesInvoice(id, input) {
     'rw',
     ['sales_invoices', 'sales_lines', 'stock_movements', 'installments', 'activity_log'],
     async () => {
+      await ensureStock(built.lines, {
+        allowNegative: Boolean(input.allowNegative),
+        excludeRef: { refType: 'sale', refId: id },
+        settings,
+      })
       await reverseDocumentMovements({
         refType: 'sale',
         refId: id,

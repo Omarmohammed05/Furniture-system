@@ -10,6 +10,7 @@ import {
   HandCoins,
   HardDriveDownload,
   HardHat,
+  History,
   LayoutDashboard,
   ListTree,
   Lock,
@@ -58,6 +59,7 @@ const DATA_LINKS = [
 
 const SYSTEM_NAV = [
   { to: '/data', label: 'البيانات', icon: Database },
+  { to: '/activity', label: 'سجل النشاط', icon: History },
   { to: '/backup', label: 'النسخ الاحتياطي', icon: HardDriveDownload },
   { to: '/settings', label: 'الإعدادات', icon: Settings },
 ]

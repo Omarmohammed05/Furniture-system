@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Save } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
 import { useToast } from '../app/ToastContext'
@@ -41,7 +41,10 @@ export function InvoiceFormPage({ kind }) {
   const toast = useToast()
   const navigate = useNavigate()
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const editing = Boolean(id)
+  // «تكرار» opens a fresh invoice prefilled from an existing one.
+  const duplicateId = editing ? '' : searchParams.get('from') || ''
 
   const [values, setValues] = useState(EMPTY_VALUES)
   const [errors, setErrors] = useState({})
@@ -55,7 +58,7 @@ export function InvoiceFormPage({ kind }) {
   const stock = useLive(() => (isSale ? getStockMap() : Promise.resolve(null)), [isSale])
 
   useEffect(() => {
-    if (!editing) {
+    if (!editing && !duplicateId) {
       setValues(EMPTY_VALUES)
       setExistingPaid(0)
       setLoading(false)
@@ -64,22 +67,23 @@ export function InvoiceFormPage({ kind }) {
     let alive = true
     setLoading(true)
     ;(async () => {
-      const data = isSale ? await getSalesInvoice(id) : await getPurchaseInvoice(id)
+      const sourceId = editing ? id : duplicateId
+      const data = isSale ? await getSalesInvoice(sourceId) : await getPurchaseInvoice(sourceId)
       if (!alive) return
       if (!data) {
-        toast.error('الفاتورة غير موجودة')
+        toast.error(editing ? 'الفاتورة غير موجودة' : 'الفاتورة الأصلية غير موجودة')
         navigate(base)
         return
       }
       const invoice = data.invoice
-      if (invoice.voidedAt) {
+      if (editing && invoice.voidedAt) {
         toast.error('لا يمكن تعديل فاتورة ملغاة')
         navigate(`${base}/${id}`)
         return
       }
       setValues({
         partyId: (isSale ? invoice.customerId : invoice.supplierId) || '',
-        date: invoice.date,
+        date: editing ? invoice.date : todayIso(),
         lines: data.lines.map((line) => ({
           itemId: line.itemId,
           qty: String(line.qty),
@@ -97,13 +101,14 @@ export function InvoiceFormPage({ kind }) {
           intervalDays: String(invoice.installmentPlan?.intervalDays || 30),
         },
       })
-      setExistingPaid(invoice.paid || 0)
+      // A duplicate starts unpaid so the payment is entered fresh.
+      setExistingPaid(editing ? invoice.paid || 0 : 0)
       setLoading(false)
     })()
     return () => {
       alive = false
     }
-  }, [editing, id, isSale, base, navigate, toast])
+  }, [editing, duplicateId, id, isSale, base, navigate, toast])
 
   const setField = (key, value) => {
     setValues((current) => ({ ...current, [key]: value }))
@@ -201,9 +206,13 @@ export function InvoiceFormPage({ kind }) {
     ? isSale
       ? 'تعديل فاتورة بيع'
       : 'تعديل فاتورة شراء'
-    : isSale
-      ? 'فاتورة بيع جديدة'
-      : 'فاتورة شراء جديدة'
+    : duplicateId
+      ? isSale
+        ? 'تكرار فاتورة بيع'
+        : 'تكرار فاتورة شراء'
+      : isSale
+        ? 'فاتورة بيع جديدة'
+        : 'فاتورة شراء جديدة'
 
   const partyLabel = isSale ? 'العميل' : 'المورد'
 

@@ -54,6 +54,27 @@ export async function listPartyBalances(kind) {
     .sort((a, b) => b.balance - a.balance)
 }
 
+/**
+ * Debt aging for one side (0–30 / 31–60 / 60+ days), the same buckets the
+ * aging report uses, so the debts screen and the report always agree.
+ */
+export async function getAging(kind = 'customers') {
+  const { buildAgingReport } = await import('./reports')
+  const report = await buildAgingReport({})
+  const [customers, suppliers] = report.sections
+  const rows = kind === 'suppliers' ? suppliers.rows : customers.rows
+  const totals = rows.reduce(
+    (acc, row) => ({
+      current: acc.current + (Number(row.current) || 0),
+      mid: acc.mid + (Number(row.mid) || 0),
+      old: acc.old + (Number(row.old) || 0),
+      total: acc.total + (Number(row.total) || 0),
+    }),
+    { current: 0, mid: 0, old: 0, total: 0 },
+  )
+  return { rows, totals }
+}
+
 export async function getBalancesSummary() {
   const [customers, suppliers] = await Promise.all([
     listPartyBalances('customers'),

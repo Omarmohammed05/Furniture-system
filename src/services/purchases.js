@@ -82,10 +82,9 @@ export async function createPurchaseInvoice(input) {
   const built = await buildPurchase(input, settings)
   assertValid(built.errors)
 
-  const number = await nextNumber('purchase')
   const deviceId = settings.app.deviceId || 'A'
   const invoice = newRecord(deviceId, {
-    number,
+    number: '',
     ...invoiceFields(built, input),
     paid: built.paid,
     status: statusFor(built.paid, built.totals.total),
@@ -95,8 +94,11 @@ export async function createPurchaseInvoice(input) {
 
   await repo.transaction(
     'rw',
-    ['purchase_invoices', 'purchase_lines', 'stock_movements', 'payments', 'activity_log'],
+    ['purchase_invoices', 'purchase_lines', 'stock_movements', 'payments', 'activity_log', 'counters'],
     async () => {
+      // The number is allocated inside the same transaction as the write.
+      const number = await nextNumber('purchase', { settings })
+      invoice.number = number
       await repo.put('purchase_invoices', invoice)
       await repo.bulkPut(
         'purchase_lines',

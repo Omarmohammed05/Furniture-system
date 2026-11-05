@@ -3,7 +3,7 @@
  * invoice balances and installment statuses are derived from those rows.
  */
 import { repository as repo } from '../data/repository'
-import { todayIso } from '../lib/dates'
+import { addDays, todayIso } from '../lib/dates'
 import { statusFor } from '../lib/invoiceStatus'
 import { fromMinor, toMinor } from '../lib/money'
 import { newRecord, touchRecord } from '../lib/records'
@@ -202,6 +202,10 @@ export async function listInstallments({ filter = 'open' } = {}) {
     .filter((row) => (filter === 'all' ? true : row.status !== 'cancelled'))
     .filter((row) => {
       if (filter === 'overdue') return isOverdue(row)
+      if (filter === 'week') {
+        const weekEnd = addDays(todayIso(), 7)
+        return row.status !== 'paid' && row.dueDate >= todayIso() && row.dueDate <= weekEnd
+      }
       if (filter === 'paid') return row.status === 'paid'
       if (filter === 'open') return row.status !== 'paid'
       return true

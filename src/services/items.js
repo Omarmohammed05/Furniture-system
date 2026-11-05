@@ -68,6 +68,7 @@ function normalize(input) {
     salePrice: toMinor(input.salePrice || 0),
     minStock: toQuantity(input.minStock || 0),
     notes: String(input.notes || '').trim(),
+    imageData: String(input.imageData || ''),
     active: true,
   }
 }

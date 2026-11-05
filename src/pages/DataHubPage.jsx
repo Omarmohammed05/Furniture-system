@@ -4,6 +4,7 @@ import {
   HandCoins,
   HardDriveDownload,
   HardHat,
+  History,
   ListTree,
   Package,
   Settings,
@@ -57,6 +58,13 @@ const SECTIONS = [
     title: 'الديون',
     description: 'أرصدة العملاء والموردين',
     icon: HandCoins,
+    countKey: null,
+  },
+  {
+    to: '/activity',
+    title: 'سجل النشاط',
+    description: 'كل الحركات المسجلة على النظام',
+    icon: History,
     countKey: null,
   },
   {
