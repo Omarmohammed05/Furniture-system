@@ -1,5 +1,6 @@
 import { NavLink, Link, Outlet } from 'react-router-dom'
 import {
+  BarChart3,
   Banknote,
   Boxes,
   CalendarClock,
@@ -37,6 +38,7 @@ const MAIN_NAV = [
   { to: '/installments', label: 'الأقساط', icon: CalendarClock },
   { to: '/payments', label: 'الدفعات', icon: Wallet },
   { to: '/debts', label: 'الديون', icon: HandCoins },
+  { to: '/reports', label: 'التقارير', icon: BarChart3 },
 ]
 
 const MONEY_NAV = [

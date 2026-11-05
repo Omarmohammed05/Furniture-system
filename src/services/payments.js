@@ -215,12 +215,9 @@ export async function listOverdueInstallments() {
 }
 
 export async function listPayments({ direction = 'all', search = '', from = '', to = '' } = {}) {
-  const rows = await repo.all('payments')
+  const rows = await repo.byRange('payments', 'date', from || undefined, to || undefined)
   const term = String(search).trim().toLowerCase()
-  return rows
-    .filter((row) => (direction === 'all' ? true : row.direction === direction))
-    .filter((row) => (from ? row.date >= from : true))
-    .filter((row) => (to ? row.date <= to : true))
+  return rows.filter((row) => (direction === 'all' ? true : row.direction === direction))
     .filter((row) => {
       if (!term) return true
       return `${row.partyName || ''} ${row.invoiceNumber || ''} ${row.note || ''}`.toLowerCase().includes(term)

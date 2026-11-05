@@ -186,6 +186,17 @@ export function InvoiceFormPage({ kind }) {
     }
   }
 
+  // Desktop speed: Ctrl/⌘ + Enter saves without reaching for the mouse.
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey) || saving) return
+      event.preventDefault()
+      save(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [saving, save])
+
   const title = editing
     ? isSale
       ? 'تعديل فاتورة بيع'
@@ -222,7 +233,13 @@ export function InvoiceFormPage({ kind }) {
                 رجوع
               </Button>
             </Link>
-            <Button variant="primary" onClick={() => save(false)} disabled={saving}>
+            <Button
+              variant="primary"
+              onClick={() => save(false)}
+              disabled={saving}
+              title="Ctrl + Enter"
+              aria-keyshortcuts="Control+Enter"
+            >
               <Save size={16} />
               {saving ? 'جارٍ الحفظ…' : 'حفظ الفاتورة'}
             </Button>

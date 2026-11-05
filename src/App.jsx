@@ -24,6 +24,7 @@ import { PartiesPage } from './pages/PartiesPage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { PayrollPage } from './pages/PayrollPage'
 import { PaySlipPage } from './pages/PaySlipPage'
+import { ReportsPage } from './pages/ReportsPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SetupPage } from './pages/SetupPage'
 import { StatementPage } from './pages/StatementPage'
@@ -78,6 +79,7 @@ export default function App() {
                   <Route path="payroll/:id" element={<PaySlipPage />} />
                   <Route path="advances" element={<AdvancesPage />} />
                   <Route path="statements" element={<StatementPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
 
                   <Route path="data" element={<DataHubPage />} />
                   <Route path="customers" element={<PartiesPage kind="customers" />} />

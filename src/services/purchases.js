@@ -269,13 +269,11 @@ export async function getPurchaseInvoice(id) {
 }
 
 export async function listPurchaseInvoices({ search = '', status = 'all', supplierId = '', from = '', to = '' } = {}) {
-  const rows = await repo.all('purchase_invoices')
+  const rows = await repo.byRange('purchase_invoices', 'date', from || undefined, to || undefined)
   const term = String(search).trim().toLowerCase()
   return rows
     .filter((row) => (status === 'all' ? true : status === 'void' ? Boolean(row.voidedAt) : row.status === status))
     .filter((row) => (supplierId ? row.supplierId === supplierId : true))
-    .filter((row) => (from ? row.date >= from : true))
-    .filter((row) => (to ? row.date <= to : true))
     .filter((row) => {
       if (!term) return true
       return `${row.number || ''} ${row.supplierName || ''} ${row.notes || ''}`.toLowerCase().includes(term)

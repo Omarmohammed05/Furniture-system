@@ -381,13 +381,12 @@ export async function getSalesInvoice(id) {
 }
 
 export async function listSalesInvoices({ search = '', status = 'all', customerId = '', from = '', to = '' } = {}) {
-  const rows = await repo.all('sales_invoices')
+  // Date range comes from the `date` index so large histories stay fast.
+  const rows = await repo.byRange('sales_invoices', 'date', from || undefined, to || undefined)
   const term = String(search).trim().toLowerCase()
   return rows
     .filter((row) => (status === 'all' ? true : status === 'void' ? Boolean(row.voidedAt) : row.status === status))
     .filter((row) => (customerId ? row.customerId === customerId : true))
-    .filter((row) => (from ? row.date >= from : true))
-    .filter((row) => (to ? row.date <= to : true))
     .filter((row) => {
       if (!term) return true
       return `${row.number || ''} ${row.customerName || ''} ${row.notes || ''}`.toLowerCase().includes(term)

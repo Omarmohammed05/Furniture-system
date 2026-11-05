@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
 import { useSettings } from '../app/SettingsContext'
 import { useLive } from '../hooks/useLive'
@@ -17,6 +18,17 @@ export function PaymentsPage() {
   const [direction, setDirection] = useState('all')
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // The dashboard quick actions link here with ?new=in / ?new=out.
+  useEffect(() => {
+    const wanted = searchParams.get('new')
+    if (wanted !== 'in' && wanted !== 'out') return
+    setModal(wanted)
+    const next = new URLSearchParams(searchParams)
+    next.delete('new')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const rows = useLive(() => listPayments({ direction, search }), [direction, search])
   const visible = rows || []

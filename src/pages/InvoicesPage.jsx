@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Ban, Eye, Pencil, Plus, ReceiptText } from 'lucide-react'
 import { useToast } from '../app/ToastContext'
@@ -16,6 +16,8 @@ import { Card } from '../components/ui/Card'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Input, Select } from '../components/ui/Field'
 import { PageHeader } from '../components/ui/PageHeader'
+
+const PAGE_SIZE = 20
 
 const CONFIG = {
   sale: {
@@ -55,6 +57,7 @@ export function InvoicesPage({ kind }) {
   const [status, setStatus] = useState('all')
   const [partyId, setPartyId] = useState('')
   const [voidTarget, setVoidTarget] = useState(null)
+  const [page, setPage] = useState(1)
 
   const invoices = useLive(
     () => config.list({ search, status, [kind === 'sale' ? 'customerId' : 'supplierId']: partyId }),
@@ -62,8 +65,17 @@ export function InvoicesPage({ kind }) {
   )
   const parties = useLive(() => listParties(config.partyField), [config.partyField])
 
-  const visible = (invoices || []).filter(Boolean)
-  const total = visible.filter((row) => !row.voidedAt).reduce((sum, row) => sum + (row.total || 0), 0)
+  const all = (invoices || []).filter(Boolean)
+  const total = all.filter((row) => !row.voidedAt).reduce((sum, row) => sum + (row.total || 0), 0)
+
+  // Thousands of invoices stay responsive: only one page is rendered.
+  const pageCount = Math.max(1, Math.ceil(all.length / PAGE_SIZE))
+  const safePage = Math.min(page, pageCount)
+  const visible = all.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE)
+
+  useEffect(() => {
+    setPage(1)
+  }, [kind, search, status, partyId])
 
   const handleVoid = async (reason) => {
     try {
@@ -122,7 +134,7 @@ export function InvoicesPage({ kind }) {
             <div key={row} className="h-14 animate-pulse rounded-xl bg-canvas" />
           ))}
         </Card>
-      ) : visible.length === 0 ? (
+      ) : all.length === 0 ? (
         <Card>
           <EmptyState
             icon={ReceiptText}
@@ -145,7 +157,7 @@ export function InvoicesPage({ kind }) {
       ) : (
         <Card>
           <div className="flex items-center justify-between border-b border-line px-4 py-2.5 text-[12px] font-semibold text-muted">
-            <span>{visible.length} فاتورة</span>
+            <span>{all.length} فاتورة</span>
             <span className="tabular">إجمالي المعروض: {money(total)}</span>
           </div>
           <ul className="divide-y divide-line">
@@ -202,6 +214,26 @@ export function InvoicesPage({ kind }) {
               )
             })}
           </ul>
+          {pageCount > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2.5 text-[12.5px] text-muted">
+              <span>
+                صفحة {safePage} من {pageCount}
+              </span>
+              <div className="flex items-center gap-1.5">
+                <Button variant="secondary" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>
+                  السابق
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPage(safePage + 1)}
+                  disabled={safePage >= pageCount}
+                >
+                  التالي
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
 
